@@ -1,0 +1,31 @@
+package com.boresjo.play.api.google.webrisk
+
+import play.api.libs.json.*
+import play.api.libs.ws.{WSClient, WSRequest}
+import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+
+import javax.inject.*
+import scala.concurrent.{ExecutionContext, Future}
+
+object Formats {
+	given fmtGoogleLongrunningCancelOperationRequest: Format[Schema.GoogleLongrunningCancelOperationRequest] = Json.format[Schema.GoogleLongrunningCancelOperationRequest]
+	given fmtGoogleCloudWebriskV1RiceDeltaEncoding: Format[Schema.GoogleCloudWebriskV1RiceDeltaEncoding] = Json.format[Schema.GoogleCloudWebriskV1RiceDeltaEncoding]
+	given fmtGoogleCloudWebriskV1Submission: Format[Schema.GoogleCloudWebriskV1Submission] = Json.format[Schema.GoogleCloudWebriskV1Submission]
+	given fmtGoogleProtobufEmpty: Format[Schema.GoogleProtobufEmpty] = Json.format[Schema.GoogleProtobufEmpty]
+	given fmtGoogleCloudWebriskV1ComputeThreatListDiffResponseChecksum: Format[Schema.GoogleCloudWebriskV1ComputeThreatListDiffResponseChecksum] = Json.format[Schema.GoogleCloudWebriskV1ComputeThreatListDiffResponseChecksum]
+	given fmtGoogleLongrunningListOperationsResponse: Format[Schema.GoogleLongrunningListOperationsResponse] = Json.format[Schema.GoogleLongrunningListOperationsResponse]
+	given fmtGoogleLongrunningOperation: Format[Schema.GoogleLongrunningOperation] = Json.format[Schema.GoogleLongrunningOperation]
+	given fmtGoogleCloudWebriskV1ThreatEntryAdditions: Format[Schema.GoogleCloudWebriskV1ThreatEntryAdditions] = Json.format[Schema.GoogleCloudWebriskV1ThreatEntryAdditions]
+	given fmtGoogleCloudWebriskV1RawHashes: Format[Schema.GoogleCloudWebriskV1RawHashes] = Json.format[Schema.GoogleCloudWebriskV1RawHashes]
+	given fmtGoogleRpcStatus: Format[Schema.GoogleRpcStatus] = Json.format[Schema.GoogleRpcStatus]
+	given fmtGoogleCloudWebriskV1ThreatEntryRemovals: Format[Schema.GoogleCloudWebriskV1ThreatEntryRemovals] = Json.format[Schema.GoogleCloudWebriskV1ThreatEntryRemovals]
+	given fmtGoogleCloudWebriskV1RawIndices: Format[Schema.GoogleCloudWebriskV1RawIndices] = Json.format[Schema.GoogleCloudWebriskV1RawIndices]
+	given fmtGoogleCloudWebriskV1SearchUrisResponse: Format[Schema.GoogleCloudWebriskV1SearchUrisResponse] = Json.format[Schema.GoogleCloudWebriskV1SearchUrisResponse]
+	given fmtGoogleCloudWebriskV1SearchUrisResponseThreatUri: Format[Schema.GoogleCloudWebriskV1SearchUrisResponseThreatUri] = Json.format[Schema.GoogleCloudWebriskV1SearchUrisResponseThreatUri]
+	given fmtGoogleCloudWebriskV1SearchHashesResponse: Format[Schema.GoogleCloudWebriskV1SearchHashesResponse] = Json.format[Schema.GoogleCloudWebriskV1SearchHashesResponse]
+	given fmtGoogleCloudWebriskV1SearchHashesResponseThreatHash: Format[Schema.GoogleCloudWebriskV1SearchHashesResponseThreatHash] = Json.format[Schema.GoogleCloudWebriskV1SearchHashesResponseThreatHash]
+	given fmtGoogleCloudWebriskV1ComputeThreatListDiffResponse: Format[Schema.GoogleCloudWebriskV1ComputeThreatListDiffResponse] = Json.format[Schema.GoogleCloudWebriskV1ComputeThreatListDiffResponse]
+	given fmtGoogleCloudWebriskV1ComputeThreatListDiffResponseResponseTypeEnum: Format[Schema.GoogleCloudWebriskV1ComputeThreatListDiffResponse.ResponseTypeEnum] = JsonEnumFormat[Schema.GoogleCloudWebriskV1ComputeThreatListDiffResponse.ResponseTypeEnum]
+	given fmtGoogleCloudWebriskV1SearchUrisResponseThreatUriThreatTypesEnum: Format[Schema.GoogleCloudWebriskV1SearchUrisResponseThreatUri.ThreatTypesEnum] = JsonEnumFormat[Schema.GoogleCloudWebriskV1SearchUrisResponseThreatUri.ThreatTypesEnum]
+	given fmtGoogleCloudWebriskV1SearchHashesResponseThreatHashThreatTypesEnum: Format[Schema.GoogleCloudWebriskV1SearchHashesResponseThreatHash.ThreatTypesEnum] = JsonEnumFormat[Schema.GoogleCloudWebriskV1SearchHashesResponseThreatHash.ThreatTypesEnum]
+}

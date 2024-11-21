@@ -1,0 +1,54 @@
+package com.boresjo.play.api.google.identitytoolkit
+
+import play.api.libs.json.*
+import play.api.libs.ws.{WSClient, WSRequest}
+import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+
+import javax.inject.*
+import scala.concurrent.{ExecutionContext, Future}
+
+object Formats {
+	given fmtCreateAuthUriResponse: Format[Schema.CreateAuthUriResponse] = Json.format[Schema.CreateAuthUriResponse]
+	given fmtDeleteAccountResponse: Format[Schema.DeleteAccountResponse] = Json.format[Schema.DeleteAccountResponse]
+	given fmtDownloadAccountResponse: Format[Schema.DownloadAccountResponse] = Json.format[Schema.DownloadAccountResponse]
+	given fmtUserInfo: Format[Schema.UserInfo] = Json.format[Schema.UserInfo]
+	given fmtEmailLinkSigninResponse: Format[Schema.EmailLinkSigninResponse] = Json.format[Schema.EmailLinkSigninResponse]
+	given fmtEmailTemplate: Format[Schema.EmailTemplate] = Json.format[Schema.EmailTemplate]
+	given fmtGetAccountInfoResponse: Format[Schema.GetAccountInfoResponse] = Json.format[Schema.GetAccountInfoResponse]
+	given fmtGetOobConfirmationCodeResponse: Format[Schema.GetOobConfirmationCodeResponse] = Json.format[Schema.GetOobConfirmationCodeResponse]
+	given fmtGetRecaptchaParamResponse: Format[Schema.GetRecaptchaParamResponse] = Json.format[Schema.GetRecaptchaParamResponse]
+	given fmtIdentitytoolkitRelyingpartyCreateAuthUriRequest: Format[Schema.IdentitytoolkitRelyingpartyCreateAuthUriRequest] = Json.format[Schema.IdentitytoolkitRelyingpartyCreateAuthUriRequest]
+	given fmtIdentitytoolkitRelyingpartyDeleteAccountRequest: Format[Schema.IdentitytoolkitRelyingpartyDeleteAccountRequest] = Json.format[Schema.IdentitytoolkitRelyingpartyDeleteAccountRequest]
+	given fmtIdentitytoolkitRelyingpartyDownloadAccountRequest: Format[Schema.IdentitytoolkitRelyingpartyDownloadAccountRequest] = Json.format[Schema.IdentitytoolkitRelyingpartyDownloadAccountRequest]
+	given fmtIdentitytoolkitRelyingpartyEmailLinkSigninRequest: Format[Schema.IdentitytoolkitRelyingpartyEmailLinkSigninRequest] = Json.format[Schema.IdentitytoolkitRelyingpartyEmailLinkSigninRequest]
+	given fmtIdentitytoolkitRelyingpartyGetAccountInfoRequest: Format[Schema.IdentitytoolkitRelyingpartyGetAccountInfoRequest] = Json.format[Schema.IdentitytoolkitRelyingpartyGetAccountInfoRequest]
+	given fmtIdentitytoolkitRelyingpartyGetProjectConfigResponse: Format[Schema.IdentitytoolkitRelyingpartyGetProjectConfigResponse] = Json.format[Schema.IdentitytoolkitRelyingpartyGetProjectConfigResponse]
+	given fmtIdpConfig: Format[Schema.IdpConfig] = Json.format[Schema.IdpConfig]
+	given fmtIdentitytoolkitRelyingpartyGetPublicKeysResponse: Format[Schema.IdentitytoolkitRelyingpartyGetPublicKeysResponse] = Json.format[Schema.IdentitytoolkitRelyingpartyGetPublicKeysResponse]
+	given fmtIdentitytoolkitRelyingpartyResetPasswordRequest: Format[Schema.IdentitytoolkitRelyingpartyResetPasswordRequest] = Json.format[Schema.IdentitytoolkitRelyingpartyResetPasswordRequest]
+	given fmtIdentitytoolkitRelyingpartySendVerificationCodeRequest: Format[Schema.IdentitytoolkitRelyingpartySendVerificationCodeRequest] = Json.format[Schema.IdentitytoolkitRelyingpartySendVerificationCodeRequest]
+	given fmtIdentitytoolkitRelyingpartySendVerificationCodeResponse: Format[Schema.IdentitytoolkitRelyingpartySendVerificationCodeResponse] = Json.format[Schema.IdentitytoolkitRelyingpartySendVerificationCodeResponse]
+	given fmtIdentitytoolkitRelyingpartySetAccountInfoRequest: Format[Schema.IdentitytoolkitRelyingpartySetAccountInfoRequest] = Json.format[Schema.IdentitytoolkitRelyingpartySetAccountInfoRequest]
+	given fmtIdentitytoolkitRelyingpartySetProjectConfigRequest: Format[Schema.IdentitytoolkitRelyingpartySetProjectConfigRequest] = Json.format[Schema.IdentitytoolkitRelyingpartySetProjectConfigRequest]
+	given fmtIdentitytoolkitRelyingpartySetProjectConfigResponse: Format[Schema.IdentitytoolkitRelyingpartySetProjectConfigResponse] = Json.format[Schema.IdentitytoolkitRelyingpartySetProjectConfigResponse]
+	given fmtIdentitytoolkitRelyingpartySignOutUserRequest: Format[Schema.IdentitytoolkitRelyingpartySignOutUserRequest] = Json.format[Schema.IdentitytoolkitRelyingpartySignOutUserRequest]
+	given fmtIdentitytoolkitRelyingpartySignOutUserResponse: Format[Schema.IdentitytoolkitRelyingpartySignOutUserResponse] = Json.format[Schema.IdentitytoolkitRelyingpartySignOutUserResponse]
+	given fmtIdentitytoolkitRelyingpartySignupNewUserRequest: Format[Schema.IdentitytoolkitRelyingpartySignupNewUserRequest] = Json.format[Schema.IdentitytoolkitRelyingpartySignupNewUserRequest]
+	given fmtIdentitytoolkitRelyingpartyUploadAccountRequest: Format[Schema.IdentitytoolkitRelyingpartyUploadAccountRequest] = Json.format[Schema.IdentitytoolkitRelyingpartyUploadAccountRequest]
+	given fmtIdentitytoolkitRelyingpartyVerifyAssertionRequest: Format[Schema.IdentitytoolkitRelyingpartyVerifyAssertionRequest] = Json.format[Schema.IdentitytoolkitRelyingpartyVerifyAssertionRequest]
+	given fmtIdentitytoolkitRelyingpartyVerifyCustomTokenRequest: Format[Schema.IdentitytoolkitRelyingpartyVerifyCustomTokenRequest] = Json.format[Schema.IdentitytoolkitRelyingpartyVerifyCustomTokenRequest]
+	given fmtIdentitytoolkitRelyingpartyVerifyPasswordRequest: Format[Schema.IdentitytoolkitRelyingpartyVerifyPasswordRequest] = Json.format[Schema.IdentitytoolkitRelyingpartyVerifyPasswordRequest]
+	given fmtIdentitytoolkitRelyingpartyVerifyPhoneNumberRequest: Format[Schema.IdentitytoolkitRelyingpartyVerifyPhoneNumberRequest] = Json.format[Schema.IdentitytoolkitRelyingpartyVerifyPhoneNumberRequest]
+	given fmtIdentitytoolkitRelyingpartyVerifyPhoneNumberResponse: Format[Schema.IdentitytoolkitRelyingpartyVerifyPhoneNumberResponse] = Json.format[Schema.IdentitytoolkitRelyingpartyVerifyPhoneNumberResponse]
+	given fmtRelyingparty: Format[Schema.Relyingparty] = Json.format[Schema.Relyingparty]
+	given fmtResetPasswordResponse: Format[Schema.ResetPasswordResponse] = Json.format[Schema.ResetPasswordResponse]
+	given fmtSetAccountInfoResponse: Format[Schema.SetAccountInfoResponse] = Json.format[Schema.SetAccountInfoResponse]
+	given fmtSetAccountInfoResponseProviderUserInfoItem: Format[Schema.SetAccountInfoResponse.ProviderUserInfoItem] = Json.format[Schema.SetAccountInfoResponse.ProviderUserInfoItem]
+	given fmtSignupNewUserResponse: Format[Schema.SignupNewUserResponse] = Json.format[Schema.SignupNewUserResponse]
+	given fmtUploadAccountResponse: Format[Schema.UploadAccountResponse] = Json.format[Schema.UploadAccountResponse]
+	given fmtUploadAccountResponseErrorItem: Format[Schema.UploadAccountResponse.ErrorItem] = Json.format[Schema.UploadAccountResponse.ErrorItem]
+	given fmtUserInfoProviderUserInfoItem: Format[Schema.UserInfo.ProviderUserInfoItem] = Json.format[Schema.UserInfo.ProviderUserInfoItem]
+	given fmtVerifyAssertionResponse: Format[Schema.VerifyAssertionResponse] = Json.format[Schema.VerifyAssertionResponse]
+	given fmtVerifyCustomTokenResponse: Format[Schema.VerifyCustomTokenResponse] = Json.format[Schema.VerifyCustomTokenResponse]
+	given fmtVerifyPasswordResponse: Format[Schema.VerifyPasswordResponse] = Json.format[Schema.VerifyPasswordResponse]
+}

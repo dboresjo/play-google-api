@@ -1,0 +1,19 @@
+package com.boresjo.play.api.google.essentialcontacts
+
+import play.api.libs.json.*
+import play.api.libs.ws.{WSClient, WSRequest}
+import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+
+import javax.inject.*
+import scala.concurrent.{ExecutionContext, Future}
+
+object Formats {
+	given fmtGoogleProtobufEmpty: Format[Schema.GoogleProtobufEmpty] = Json.format[Schema.GoogleProtobufEmpty]
+	given fmtGoogleCloudEssentialcontactsV1SendTestMessageRequest: Format[Schema.GoogleCloudEssentialcontactsV1SendTestMessageRequest] = Json.format[Schema.GoogleCloudEssentialcontactsV1SendTestMessageRequest]
+	given fmtGoogleCloudEssentialcontactsV1SendTestMessageRequestNotificationCategoryEnum: Format[Schema.GoogleCloudEssentialcontactsV1SendTestMessageRequest.NotificationCategoryEnum] = JsonEnumFormat[Schema.GoogleCloudEssentialcontactsV1SendTestMessageRequest.NotificationCategoryEnum]
+	given fmtGoogleCloudEssentialcontactsV1ListContactsResponse: Format[Schema.GoogleCloudEssentialcontactsV1ListContactsResponse] = Json.format[Schema.GoogleCloudEssentialcontactsV1ListContactsResponse]
+	given fmtGoogleCloudEssentialcontactsV1Contact: Format[Schema.GoogleCloudEssentialcontactsV1Contact] = Json.format[Schema.GoogleCloudEssentialcontactsV1Contact]
+	given fmtGoogleCloudEssentialcontactsV1ComputeContactsResponse: Format[Schema.GoogleCloudEssentialcontactsV1ComputeContactsResponse] = Json.format[Schema.GoogleCloudEssentialcontactsV1ComputeContactsResponse]
+	given fmtGoogleCloudEssentialcontactsV1ContactNotificationCategorySubscriptionsEnum: Format[Schema.GoogleCloudEssentialcontactsV1Contact.NotificationCategorySubscriptionsEnum] = JsonEnumFormat[Schema.GoogleCloudEssentialcontactsV1Contact.NotificationCategorySubscriptionsEnum]
+	given fmtGoogleCloudEssentialcontactsV1ContactValidationStateEnum: Format[Schema.GoogleCloudEssentialcontactsV1Contact.ValidationStateEnum] = JsonEnumFormat[Schema.GoogleCloudEssentialcontactsV1Contact.ValidationStateEnum]
+}

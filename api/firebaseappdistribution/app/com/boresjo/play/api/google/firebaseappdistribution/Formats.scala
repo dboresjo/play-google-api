@@ -1,0 +1,55 @@
+package com.boresjo.play.api.google.firebaseappdistribution
+
+import play.api.libs.json.*
+import play.api.libs.ws.{WSClient, WSRequest}
+import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+
+import javax.inject.*
+import scala.concurrent.{ExecutionContext, Future}
+
+object Formats {
+	given fmtGoogleFirebaseAppdistroV1BatchJoinGroupRequest: Format[Schema.GoogleFirebaseAppdistroV1BatchJoinGroupRequest] = Json.format[Schema.GoogleFirebaseAppdistroV1BatchJoinGroupRequest]
+	given fmtGoogleFirebaseAppdistroV1UploadReleaseMetadata: Format[Schema.GoogleFirebaseAppdistroV1UploadReleaseMetadata] = Json.format[Schema.GoogleFirebaseAppdistroV1UploadReleaseMetadata]
+	given fmtGoogleFirebaseAppdistroV1BatchAddTestersResponse: Format[Schema.GoogleFirebaseAppdistroV1BatchAddTestersResponse] = Json.format[Schema.GoogleFirebaseAppdistroV1BatchAddTestersResponse]
+	given fmtGoogleFirebaseAppdistroV1Tester: Format[Schema.GoogleFirebaseAppdistroV1Tester] = Json.format[Schema.GoogleFirebaseAppdistroV1Tester]
+	given fmtGoogleFirebaseAppdistroV1DistributeReleaseResponse: Format[Schema.GoogleFirebaseAppdistroV1DistributeReleaseResponse] = Json.format[Schema.GoogleFirebaseAppdistroV1DistributeReleaseResponse]
+	given fmtGoogleRpcStatus: Format[Schema.GoogleRpcStatus] = Json.format[Schema.GoogleRpcStatus]
+	given fmtGdataDownloadParameters: Format[Schema.GdataDownloadParameters] = Json.format[Schema.GdataDownloadParameters]
+	given fmtGoogleFirebaseAppdistroV1BatchAddTestersRequest: Format[Schema.GoogleFirebaseAppdistroV1BatchAddTestersRequest] = Json.format[Schema.GoogleFirebaseAppdistroV1BatchAddTestersRequest]
+	given fmtGoogleFirebaseAppdistroV1ListTestersResponse: Format[Schema.GoogleFirebaseAppdistroV1ListTestersResponse] = Json.format[Schema.GoogleFirebaseAppdistroV1ListTestersResponse]
+	given fmtGoogleFirebaseAppdistroV1TestCertificate: Format[Schema.GoogleFirebaseAppdistroV1TestCertificate] = Json.format[Schema.GoogleFirebaseAppdistroV1TestCertificate]
+	given fmtGoogleLongrunningOperation: Format[Schema.GoogleLongrunningOperation] = Json.format[Schema.GoogleLongrunningOperation]
+	given fmtGoogleFirebaseAppdistroV1DistributeReleaseRequest: Format[Schema.GoogleFirebaseAppdistroV1DistributeReleaseRequest] = Json.format[Schema.GoogleFirebaseAppdistroV1DistributeReleaseRequest]
+	given fmtGoogleFirebaseAppdistroV1Release: Format[Schema.GoogleFirebaseAppdistroV1Release] = Json.format[Schema.GoogleFirebaseAppdistroV1Release]
+	given fmtGoogleFirebaseAppdistroV1ReleaseNotes: Format[Schema.GoogleFirebaseAppdistroV1ReleaseNotes] = Json.format[Schema.GoogleFirebaseAppdistroV1ReleaseNotes]
+	given fmtGoogleFirebaseAppdistroV1ListReleasesResponse: Format[Schema.GoogleFirebaseAppdistroV1ListReleasesResponse] = Json.format[Schema.GoogleFirebaseAppdistroV1ListReleasesResponse]
+	given fmtGdataDiffChecksumsResponse: Format[Schema.GdataDiffChecksumsResponse] = Json.format[Schema.GdataDiffChecksumsResponse]
+	given fmtGdataCompositeMedia: Format[Schema.GdataCompositeMedia] = Json.format[Schema.GdataCompositeMedia]
+	given fmtGoogleFirebaseAppdistroV1ListGroupsResponse: Format[Schema.GoogleFirebaseAppdistroV1ListGroupsResponse] = Json.format[Schema.GoogleFirebaseAppdistroV1ListGroupsResponse]
+	given fmtGoogleFirebaseAppdistroV1Group: Format[Schema.GoogleFirebaseAppdistroV1Group] = Json.format[Schema.GoogleFirebaseAppdistroV1Group]
+	given fmtGdataObjectId: Format[Schema.GdataObjectId] = Json.format[Schema.GdataObjectId]
+	given fmtGoogleLongrunningWaitOperationRequest: Format[Schema.GoogleLongrunningWaitOperationRequest] = Json.format[Schema.GoogleLongrunningWaitOperationRequest]
+	given fmtGoogleFirebaseAppdistroV1FeedbackReport: Format[Schema.GoogleFirebaseAppdistroV1FeedbackReport] = Json.format[Schema.GoogleFirebaseAppdistroV1FeedbackReport]
+	given fmtGoogleFirebaseAppdistroV1ListFeedbackReportsResponse: Format[Schema.GoogleFirebaseAppdistroV1ListFeedbackReportsResponse] = Json.format[Schema.GoogleFirebaseAppdistroV1ListFeedbackReportsResponse]
+	given fmtGdataMedia: Format[Schema.GdataMedia] = Json.format[Schema.GdataMedia]
+	given fmtGdataMediaReferenceTypeEnum: Format[Schema.GdataMedia.ReferenceTypeEnum] = JsonEnumFormat[Schema.GdataMedia.ReferenceTypeEnum]
+	given fmtGdataBlobstore2Info: Format[Schema.GdataBlobstore2Info] = Json.format[Schema.GdataBlobstore2Info]
+	given fmtGdataDiffDownloadResponse: Format[Schema.GdataDiffDownloadResponse] = Json.format[Schema.GdataDiffDownloadResponse]
+	given fmtGdataDiffUploadRequest: Format[Schema.GdataDiffUploadRequest] = Json.format[Schema.GdataDiffUploadRequest]
+	given fmtGdataContentTypeInfo: Format[Schema.GdataContentTypeInfo] = Json.format[Schema.GdataContentTypeInfo]
+	given fmtGdataDiffVersionResponse: Format[Schema.GdataDiffVersionResponse] = Json.format[Schema.GdataDiffVersionResponse]
+	given fmtGdataDiffUploadResponse: Format[Schema.GdataDiffUploadResponse] = Json.format[Schema.GdataDiffUploadResponse]
+	given fmtGoogleLongrunningCancelOperationRequest: Format[Schema.GoogleLongrunningCancelOperationRequest] = Json.format[Schema.GoogleLongrunningCancelOperationRequest]
+	given fmtGoogleLongrunningListOperationsResponse: Format[Schema.GoogleLongrunningListOperationsResponse] = Json.format[Schema.GoogleLongrunningListOperationsResponse]
+	given fmtGdataCompositeMediaReferenceTypeEnum: Format[Schema.GdataCompositeMedia.ReferenceTypeEnum] = JsonEnumFormat[Schema.GdataCompositeMedia.ReferenceTypeEnum]
+	given fmtGoogleFirebaseAppdistroV1UploadReleaseResponse: Format[Schema.GoogleFirebaseAppdistroV1UploadReleaseResponse] = Json.format[Schema.GoogleFirebaseAppdistroV1UploadReleaseResponse]
+	given fmtGoogleFirebaseAppdistroV1UploadReleaseResponseResultEnum: Format[Schema.GoogleFirebaseAppdistroV1UploadReleaseResponse.ResultEnum] = JsonEnumFormat[Schema.GoogleFirebaseAppdistroV1UploadReleaseResponse.ResultEnum]
+	given fmtGoogleFirebaseAppdistroV1UploadReleaseRequest: Format[Schema.GoogleFirebaseAppdistroV1UploadReleaseRequest] = Json.format[Schema.GoogleFirebaseAppdistroV1UploadReleaseRequest]
+	given fmtGoogleFirebaseAppdistroV1BatchRemoveTestersResponse: Format[Schema.GoogleFirebaseAppdistroV1BatchRemoveTestersResponse] = Json.format[Schema.GoogleFirebaseAppdistroV1BatchRemoveTestersResponse]
+	given fmtGoogleProtobufEmpty: Format[Schema.GoogleProtobufEmpty] = Json.format[Schema.GoogleProtobufEmpty]
+	given fmtGoogleFirebaseAppdistroV1BatchDeleteReleasesRequest: Format[Schema.GoogleFirebaseAppdistroV1BatchDeleteReleasesRequest] = Json.format[Schema.GoogleFirebaseAppdistroV1BatchDeleteReleasesRequest]
+	given fmtGoogleFirebaseAppdistroV1BatchRemoveTestersRequest: Format[Schema.GoogleFirebaseAppdistroV1BatchRemoveTestersRequest] = Json.format[Schema.GoogleFirebaseAppdistroV1BatchRemoveTestersRequest]
+	given fmtGoogleFirebaseAppdistroV1BatchLeaveGroupRequest: Format[Schema.GoogleFirebaseAppdistroV1BatchLeaveGroupRequest] = Json.format[Schema.GoogleFirebaseAppdistroV1BatchLeaveGroupRequest]
+	given fmtGoogleFirebaseAppdistroV1AabInfo: Format[Schema.GoogleFirebaseAppdistroV1AabInfo] = Json.format[Schema.GoogleFirebaseAppdistroV1AabInfo]
+	given fmtGoogleFirebaseAppdistroV1AabInfoIntegrationStateEnum: Format[Schema.GoogleFirebaseAppdistroV1AabInfo.IntegrationStateEnum] = JsonEnumFormat[Schema.GoogleFirebaseAppdistroV1AabInfo.IntegrationStateEnum]
+}

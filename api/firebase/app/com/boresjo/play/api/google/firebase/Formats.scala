@@ -1,0 +1,61 @@
+package com.boresjo.play.api.google.firebase
+
+import play.api.libs.json.*
+import play.api.libs.ws.{WSClient, WSRequest}
+import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+
+import javax.inject.*
+import scala.concurrent.{ExecutionContext, Future}
+
+object Formats {
+	given fmtOperation: Format[Schema.Operation] = Json.format[Schema.Operation]
+	given fmtStatus: Format[Schema.Status] = Json.format[Schema.Status]
+	given fmtAndroidApp: Format[Schema.AndroidApp] = Json.format[Schema.AndroidApp]
+	given fmtAndroidAppStateEnum: Format[Schema.AndroidApp.StateEnum] = JsonEnumFormat[Schema.AndroidApp.StateEnum]
+	given fmtListAndroidAppsResponse: Format[Schema.ListAndroidAppsResponse] = Json.format[Schema.ListAndroidAppsResponse]
+	given fmtRemoveAndroidAppRequest: Format[Schema.RemoveAndroidAppRequest] = Json.format[Schema.RemoveAndroidAppRequest]
+	given fmtUndeleteAndroidAppRequest: Format[Schema.UndeleteAndroidAppRequest] = Json.format[Schema.UndeleteAndroidAppRequest]
+	given fmtAndroidAppConfig: Format[Schema.AndroidAppConfig] = Json.format[Schema.AndroidAppConfig]
+	given fmtListShaCertificatesResponse: Format[Schema.ListShaCertificatesResponse] = Json.format[Schema.ListShaCertificatesResponse]
+	given fmtShaCertificate: Format[Schema.ShaCertificate] = Json.format[Schema.ShaCertificate]
+	given fmtShaCertificateCertTypeEnum: Format[Schema.ShaCertificate.CertTypeEnum] = JsonEnumFormat[Schema.ShaCertificate.CertTypeEnum]
+	given fmtEmpty: Format[Schema.Empty] = Json.format[Schema.Empty]
+	given fmtAddGoogleAnalyticsRequest: Format[Schema.AddGoogleAnalyticsRequest] = Json.format[Schema.AddGoogleAnalyticsRequest]
+	given fmtAnalyticsDetails: Format[Schema.AnalyticsDetails] = Json.format[Schema.AnalyticsDetails]
+	given fmtAnalyticsProperty: Format[Schema.AnalyticsProperty] = Json.format[Schema.AnalyticsProperty]
+	given fmtStreamMapping: Format[Schema.StreamMapping] = Json.format[Schema.StreamMapping]
+	given fmtRemoveAnalyticsRequest: Format[Schema.RemoveAnalyticsRequest] = Json.format[Schema.RemoveAnalyticsRequest]
+	given fmtIosApp: Format[Schema.IosApp] = Json.format[Schema.IosApp]
+	given fmtIosAppStateEnum: Format[Schema.IosApp.StateEnum] = JsonEnumFormat[Schema.IosApp.StateEnum]
+	given fmtListIosAppsResponse: Format[Schema.ListIosAppsResponse] = Json.format[Schema.ListIosAppsResponse]
+	given fmtRemoveIosAppRequest: Format[Schema.RemoveIosAppRequest] = Json.format[Schema.RemoveIosAppRequest]
+	given fmtUndeleteIosAppRequest: Format[Schema.UndeleteIosAppRequest] = Json.format[Schema.UndeleteIosAppRequest]
+	given fmtIosAppConfig: Format[Schema.IosAppConfig] = Json.format[Schema.IosAppConfig]
+	given fmtFirebaseProject: Format[Schema.FirebaseProject] = Json.format[Schema.FirebaseProject]
+	given fmtDefaultResources: Format[Schema.DefaultResources] = Json.format[Schema.DefaultResources]
+	given fmtFirebaseProjectStateEnum: Format[Schema.FirebaseProject.StateEnum] = JsonEnumFormat[Schema.FirebaseProject.StateEnum]
+	given fmtListFirebaseProjectsResponse: Format[Schema.ListFirebaseProjectsResponse] = Json.format[Schema.ListFirebaseProjectsResponse]
+	given fmtAddFirebaseRequest: Format[Schema.AddFirebaseRequest] = Json.format[Schema.AddFirebaseRequest]
+	given fmtListAvailableProjectsResponse: Format[Schema.ListAvailableProjectsResponse] = Json.format[Schema.ListAvailableProjectsResponse]
+	given fmtProjectInfo: Format[Schema.ProjectInfo] = Json.format[Schema.ProjectInfo]
+	given fmtListAvailableLocationsResponse: Format[Schema.ListAvailableLocationsResponse] = Json.format[Schema.ListAvailableLocationsResponse]
+	given fmtLocation: Format[Schema.Location] = Json.format[Schema.Location]
+	given fmtLocationTypeEnum: Format[Schema.Location.TypeEnum] = JsonEnumFormat[Schema.Location.TypeEnum]
+	given fmtLocationFeaturesEnum: Format[Schema.Location.FeaturesEnum] = JsonEnumFormat[Schema.Location.FeaturesEnum]
+	given fmtFinalizeDefaultLocationRequest: Format[Schema.FinalizeDefaultLocationRequest] = Json.format[Schema.FinalizeDefaultLocationRequest]
+	given fmtAdminSdkConfig: Format[Schema.AdminSdkConfig] = Json.format[Schema.AdminSdkConfig]
+	given fmtSearchFirebaseAppsResponse: Format[Schema.SearchFirebaseAppsResponse] = Json.format[Schema.SearchFirebaseAppsResponse]
+	given fmtFirebaseAppInfo: Format[Schema.FirebaseAppInfo] = Json.format[Schema.FirebaseAppInfo]
+	given fmtFirebaseAppInfoPlatformEnum: Format[Schema.FirebaseAppInfo.PlatformEnum] = JsonEnumFormat[Schema.FirebaseAppInfo.PlatformEnum]
+	given fmtFirebaseAppInfoStateEnum: Format[Schema.FirebaseAppInfo.StateEnum] = JsonEnumFormat[Schema.FirebaseAppInfo.StateEnum]
+	given fmtWebApp: Format[Schema.WebApp] = Json.format[Schema.WebApp]
+	given fmtWebAppStateEnum: Format[Schema.WebApp.StateEnum] = JsonEnumFormat[Schema.WebApp.StateEnum]
+	given fmtListWebAppsResponse: Format[Schema.ListWebAppsResponse] = Json.format[Schema.ListWebAppsResponse]
+	given fmtRemoveWebAppRequest: Format[Schema.RemoveWebAppRequest] = Json.format[Schema.RemoveWebAppRequest]
+	given fmtUndeleteWebAppRequest: Format[Schema.UndeleteWebAppRequest] = Json.format[Schema.UndeleteWebAppRequest]
+	given fmtWebAppConfig: Format[Schema.WebAppConfig] = Json.format[Schema.WebAppConfig]
+	given fmtStatusProto: Format[Schema.StatusProto] = Json.format[Schema.StatusProto]
+	given fmtMessageSet: Format[Schema.MessageSet] = Json.format[Schema.MessageSet]
+	given fmtProductMetadata: Format[Schema.ProductMetadata] = Json.format[Schema.ProductMetadata]
+	given fmtOperationMetadata: Format[Schema.OperationMetadata] = Json.format[Schema.OperationMetadata]
+}

@@ -1,0 +1,88 @@
+package com.boresjo.play.api.google.baremetalsolution
+
+import play.api.libs.json.*
+import play.api.libs.ws.{WSClient, WSRequest}
+import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+
+import javax.inject.*
+import scala.concurrent.{ExecutionContext, Future}
+
+object Helpers {
+	import Schema.*
+	object AutoOption {
+		given putListSchemaInstance: Conversion[List[Schema.Instance], Option[List[Schema.Instance]]] = (fun: List[Schema.Instance]) => Option(fun)
+		given putString: Conversion[String, Option[String]] = (fun: String) => Option(fun)
+		given putListString: Conversion[List[String], Option[List[String]]] = (fun: List[String]) => Option(fun)
+		given putSchemaInstanceStateEnum: Conversion[Schema.Instance.StateEnum, Option[Schema.Instance.StateEnum]] = (fun: Schema.Instance.StateEnum) => Option(fun)
+		given putBoolean: Conversion[Boolean, Option[Boolean]] = (fun: Boolean) => Option(fun)
+		given putMapStringString: Conversion[Map[String, String], Option[Map[String, String]]] = (fun: Map[String, String]) => Option(fun)
+		given putListSchemaLun: Conversion[List[Schema.Lun], Option[List[Schema.Lun]]] = (fun: List[Schema.Lun]) => Option(fun)
+		given putListSchemaVolume: Conversion[List[Schema.Volume], Option[List[Schema.Volume]]] = (fun: List[Schema.Volume]) => Option(fun)
+		given putListSchemaNetwork: Conversion[List[Schema.Network], Option[List[Schema.Network]]] = (fun: List[Schema.Network]) => Option(fun)
+		given putListSchemaGoogleCloudBaremetalsolutionV2LogicalInterface: Conversion[List[Schema.GoogleCloudBaremetalsolutionV2LogicalInterface], Option[List[Schema.GoogleCloudBaremetalsolutionV2LogicalInterface]]] = (fun: List[Schema.GoogleCloudBaremetalsolutionV2LogicalInterface]) => Option(fun)
+		given putSchemaInstanceWorkloadProfileEnum: Conversion[Schema.Instance.WorkloadProfileEnum, Option[Schema.Instance.WorkloadProfileEnum]] = (fun: Schema.Instance.WorkloadProfileEnum) => Option(fun)
+		given putSchemaLunStateEnum: Conversion[Schema.Lun.StateEnum, Option[Schema.Lun.StateEnum]] = (fun: Schema.Lun.StateEnum) => Option(fun)
+		given putSchemaLunMultiprotocolTypeEnum: Conversion[Schema.Lun.MultiprotocolTypeEnum, Option[Schema.Lun.MultiprotocolTypeEnum]] = (fun: Schema.Lun.MultiprotocolTypeEnum) => Option(fun)
+		given putSchemaLunStorageTypeEnum: Conversion[Schema.Lun.StorageTypeEnum, Option[Schema.Lun.StorageTypeEnum]] = (fun: Schema.Lun.StorageTypeEnum) => Option(fun)
+		given putSchemaVolumeStorageTypeEnum: Conversion[Schema.Volume.StorageTypeEnum, Option[Schema.Volume.StorageTypeEnum]] = (fun: Schema.Volume.StorageTypeEnum) => Option(fun)
+		given putSchemaVolumeStateEnum: Conversion[Schema.Volume.StateEnum, Option[Schema.Volume.StateEnum]] = (fun: Schema.Volume.StateEnum) => Option(fun)
+		given putSchemaSnapshotReservationDetail: Conversion[Schema.SnapshotReservationDetail, Option[Schema.SnapshotReservationDetail]] = (fun: Schema.SnapshotReservationDetail) => Option(fun)
+		given putSchemaVolumeSnapshotAutoDeleteBehaviorEnum: Conversion[Schema.Volume.SnapshotAutoDeleteBehaviorEnum, Option[Schema.Volume.SnapshotAutoDeleteBehaviorEnum]] = (fun: Schema.Volume.SnapshotAutoDeleteBehaviorEnum) => Option(fun)
+		given putSchemaVolumeProtocolEnum: Conversion[Schema.Volume.ProtocolEnum, Option[Schema.Volume.ProtocolEnum]] = (fun: Schema.Volume.ProtocolEnum) => Option(fun)
+		given putSchemaVolumePerformanceTierEnum: Conversion[Schema.Volume.PerformanceTierEnum, Option[Schema.Volume.PerformanceTierEnum]] = (fun: Schema.Volume.PerformanceTierEnum) => Option(fun)
+		given putSchemaVolumeWorkloadProfileEnum: Conversion[Schema.Volume.WorkloadProfileEnum, Option[Schema.Volume.WorkloadProfileEnum]] = (fun: Schema.Volume.WorkloadProfileEnum) => Option(fun)
+		given putInt: Conversion[Int, Option[Int]] = (fun: Int) => Option(fun)
+		given putSchemaNetworkTypeEnum: Conversion[Schema.Network.TypeEnum, Option[Schema.Network.TypeEnum]] = (fun: Schema.Network.TypeEnum) => Option(fun)
+		given putSchemaNetworkStateEnum: Conversion[Schema.Network.StateEnum, Option[Schema.Network.StateEnum]] = (fun: Schema.Network.StateEnum) => Option(fun)
+		given putSchemaVRF: Conversion[Schema.VRF, Option[Schema.VRF]] = (fun: Schema.VRF) => Option(fun)
+		given putListSchemaNetworkAddressReservation: Conversion[List[Schema.NetworkAddressReservation], Option[List[Schema.NetworkAddressReservation]]] = (fun: List[Schema.NetworkAddressReservation]) => Option(fun)
+		given putListSchemaNetworkMountPoint: Conversion[List[Schema.NetworkMountPoint], Option[List[Schema.NetworkMountPoint]]] = (fun: List[Schema.NetworkMountPoint]) => Option(fun)
+		given putSchemaVRFStateEnum: Conversion[Schema.VRF.StateEnum, Option[Schema.VRF.StateEnum]] = (fun: Schema.VRF.StateEnum) => Option(fun)
+		given putSchemaQosPolicy: Conversion[Schema.QosPolicy, Option[Schema.QosPolicy]] = (fun: Schema.QosPolicy) => Option(fun)
+		given putListSchemaVlanAttachment: Conversion[List[Schema.VlanAttachment], Option[List[Schema.VlanAttachment]]] = (fun: List[Schema.VlanAttachment]) => Option(fun)
+		given putBigDecimal: Conversion[BigDecimal, Option[BigDecimal]] = (fun: BigDecimal) => Option(fun)
+		given putListSchemaLogicalNetworkInterface: Conversion[List[Schema.LogicalNetworkInterface], Option[List[Schema.LogicalNetworkInterface]]] = (fun: List[Schema.LogicalNetworkInterface]) => Option(fun)
+		given putSchemaLogicalNetworkInterfaceNetworkTypeEnum: Conversion[Schema.LogicalNetworkInterface.NetworkTypeEnum, Option[Schema.LogicalNetworkInterface.NetworkTypeEnum]] = (fun: Schema.LogicalNetworkInterface.NetworkTypeEnum) => Option(fun)
+		given putMapStringSchemaUserAccount: Conversion[Map[String, Schema.UserAccount], Option[Map[String, Schema.UserAccount]]] = (fun: Map[String, Schema.UserAccount]) => Option(fun)
+		given putListSchemaSSHKey: Conversion[List[Schema.SSHKey], Option[List[Schema.SSHKey]]] = (fun: List[Schema.SSHKey]) => Option(fun)
+		given putMapStringJsValue: Conversion[Map[String, JsValue], Option[Map[String, JsValue]]] = (fun: Map[String, JsValue]) => Option(fun)
+		given putSchemaStatus: Conversion[Schema.Status, Option[Schema.Status]] = (fun: Schema.Status) => Option(fun)
+		given putListMapStringJsValue: Conversion[List[Map[String, JsValue]], Option[List[Map[String, JsValue]]]] = (fun: List[Map[String, JsValue]]) => Option(fun)
+		given putListSchemaNetworkUsage: Conversion[List[Schema.NetworkUsage], Option[List[Schema.NetworkUsage]]] = (fun: List[Schema.NetworkUsage]) => Option(fun)
+		given putSchemaNetwork: Conversion[Schema.Network, Option[Schema.Network]] = (fun: Schema.Network) => Option(fun)
+		given putSchemaVolumeSnapshotTypeEnum: Conversion[Schema.VolumeSnapshot.TypeEnum, Option[Schema.VolumeSnapshot.TypeEnum]] = (fun: Schema.VolumeSnapshot.TypeEnum) => Option(fun)
+		given putListSchemaVolumeSnapshot: Conversion[List[Schema.VolumeSnapshot], Option[List[Schema.VolumeSnapshot]]] = (fun: List[Schema.VolumeSnapshot]) => Option(fun)
+		given putSchemaNfsShareStateEnum: Conversion[Schema.NfsShare.StateEnum, Option[Schema.NfsShare.StateEnum]] = (fun: Schema.NfsShare.StateEnum) => Option(fun)
+		given putListSchemaAllowedClient: Conversion[List[Schema.AllowedClient], Option[List[Schema.AllowedClient]]] = (fun: List[Schema.AllowedClient]) => Option(fun)
+		given putSchemaNfsShareStorageTypeEnum: Conversion[Schema.NfsShare.StorageTypeEnum, Option[Schema.NfsShare.StorageTypeEnum]] = (fun: Schema.NfsShare.StorageTypeEnum) => Option(fun)
+		given putSchemaAllowedClientMountPermissionsEnum: Conversion[Schema.AllowedClient.MountPermissionsEnum, Option[Schema.AllowedClient.MountPermissionsEnum]] = (fun: Schema.AllowedClient.MountPermissionsEnum) => Option(fun)
+		given putListSchemaNfsShare: Conversion[List[Schema.NfsShare], Option[List[Schema.NfsShare]]] = (fun: List[Schema.NfsShare]) => Option(fun)
+		given putListSchemaProvisioningQuota: Conversion[List[Schema.ProvisioningQuota], Option[List[Schema.ProvisioningQuota]]] = (fun: List[Schema.ProvisioningQuota]) => Option(fun)
+		given putSchemaProvisioningQuotaAssetTypeEnum: Conversion[Schema.ProvisioningQuota.AssetTypeEnum, Option[Schema.ProvisioningQuota.AssetTypeEnum]] = (fun: Schema.ProvisioningQuota.AssetTypeEnum) => Option(fun)
+		given putSchemaInstanceQuota: Conversion[Schema.InstanceQuota, Option[Schema.InstanceQuota]] = (fun: Schema.InstanceQuota) => Option(fun)
+		given putSchemaProvisioningConfig: Conversion[Schema.ProvisioningConfig, Option[Schema.ProvisioningConfig]] = (fun: Schema.ProvisioningConfig) => Option(fun)
+		given putListSchemaInstanceConfig: Conversion[List[Schema.InstanceConfig], Option[List[Schema.InstanceConfig]]] = (fun: List[Schema.InstanceConfig]) => Option(fun)
+		given putListSchemaNetworkConfig: Conversion[List[Schema.NetworkConfig], Option[List[Schema.NetworkConfig]]] = (fun: List[Schema.NetworkConfig]) => Option(fun)
+		given putListSchemaVolumeConfig: Conversion[List[Schema.VolumeConfig], Option[List[Schema.VolumeConfig]]] = (fun: List[Schema.VolumeConfig]) => Option(fun)
+		given putSchemaProvisioningConfigStateEnum: Conversion[Schema.ProvisioningConfig.StateEnum, Option[Schema.ProvisioningConfig.StateEnum]] = (fun: Schema.ProvisioningConfig.StateEnum) => Option(fun)
+		given putSchemaNetworkAddress: Conversion[Schema.NetworkAddress, Option[Schema.NetworkAddress]] = (fun: Schema.NetworkAddress) => Option(fun)
+		given putSchemaInstanceConfigNetworkConfigEnum: Conversion[Schema.InstanceConfig.NetworkConfigEnum, Option[Schema.InstanceConfig.NetworkConfigEnum]] = (fun: Schema.InstanceConfig.NetworkConfigEnum) => Option(fun)
+		given putSchemaNetworkConfigTypeEnum: Conversion[Schema.NetworkConfig.TypeEnum, Option[Schema.NetworkConfig.TypeEnum]] = (fun: Schema.NetworkConfig.TypeEnum) => Option(fun)
+		given putSchemaNetworkConfigBandwidthEnum: Conversion[Schema.NetworkConfig.BandwidthEnum, Option[Schema.NetworkConfig.BandwidthEnum]] = (fun: Schema.NetworkConfig.BandwidthEnum) => Option(fun)
+		given putListSchemaIntakeVlanAttachment: Conversion[List[Schema.IntakeVlanAttachment], Option[List[Schema.IntakeVlanAttachment]]] = (fun: List[Schema.IntakeVlanAttachment]) => Option(fun)
+		given putSchemaNetworkConfigServiceCidrEnum: Conversion[Schema.NetworkConfig.ServiceCidrEnum, Option[Schema.NetworkConfig.ServiceCidrEnum]] = (fun: Schema.NetworkConfig.ServiceCidrEnum) => Option(fun)
+		given putSchemaVolumeConfigTypeEnum: Conversion[Schema.VolumeConfig.TypeEnum, Option[Schema.VolumeConfig.TypeEnum]] = (fun: Schema.VolumeConfig.TypeEnum) => Option(fun)
+		given putSchemaVolumeConfigProtocolEnum: Conversion[Schema.VolumeConfig.ProtocolEnum, Option[Schema.VolumeConfig.ProtocolEnum]] = (fun: Schema.VolumeConfig.ProtocolEnum) => Option(fun)
+		given putListSchemaLunRange: Conversion[List[Schema.LunRange], Option[List[Schema.LunRange]]] = (fun: List[Schema.LunRange]) => Option(fun)
+		given putListSchemaNfsExport: Conversion[List[Schema.NfsExport], Option[List[Schema.NfsExport]]] = (fun: List[Schema.NfsExport]) => Option(fun)
+		given putSchemaVolumeConfigPerformanceTierEnum: Conversion[Schema.VolumeConfig.PerformanceTierEnum, Option[Schema.VolumeConfig.PerformanceTierEnum]] = (fun: Schema.VolumeConfig.PerformanceTierEnum) => Option(fun)
+		given putSchemaNfsExportPermissionsEnum: Conversion[Schema.NfsExport.PermissionsEnum, Option[Schema.NfsExport.PermissionsEnum]] = (fun: Schema.NfsExport.PermissionsEnum) => Option(fun)
+		given putListSchemaOSImage: Conversion[List[Schema.OSImage], Option[List[Schema.OSImage]]] = (fun: List[Schema.OSImage]) => Option(fun)
+		given putListSchemaLocation: Conversion[List[Schema.Location], Option[List[Schema.Location]]] = (fun: List[Schema.Location]) => Option(fun)
+		given putListSchemaGoogleCloudBaremetalsolutionV2ServerNetworkTemplateLogicalInterface: Conversion[List[Schema.GoogleCloudBaremetalsolutionV2ServerNetworkTemplateLogicalInterface], Option[List[Schema.GoogleCloudBaremetalsolutionV2ServerNetworkTemplateLogicalInterface]]] = (fun: List[Schema.GoogleCloudBaremetalsolutionV2ServerNetworkTemplateLogicalInterface]) => Option(fun)
+		given putSchemaGoogleCloudBaremetalsolutionV2ServerNetworkTemplateLogicalInterfaceTypeEnum: Conversion[Schema.GoogleCloudBaremetalsolutionV2ServerNetworkTemplateLogicalInterface.TypeEnum, Option[Schema.GoogleCloudBaremetalsolutionV2ServerNetworkTemplateLogicalInterface.TypeEnum]] = (fun: Schema.GoogleCloudBaremetalsolutionV2ServerNetworkTemplateLogicalInterface.TypeEnum) => Option(fun)
+	}
+	object OptionDefault {
+		given getString: Conversion[Option[String], String] = (fun: Option[String]) => fun.getOrElse("")
+	}
+}

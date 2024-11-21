@@ -1,0 +1,60 @@
+package com.boresjo.play.api.google.cloudtasks
+
+import play.api.libs.json.*
+import play.api.libs.ws.{WSClient, WSRequest}
+import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+
+import javax.inject.*
+import scala.concurrent.{ExecutionContext, Future}
+
+object Formats {
+	given fmtListLocationsResponse: Format[Schema.ListLocationsResponse] = Json.format[Schema.ListLocationsResponse]
+	given fmtLocation: Format[Schema.Location] = Json.format[Schema.Location]
+	given fmtListQueuesResponse: Format[Schema.ListQueuesResponse] = Json.format[Schema.ListQueuesResponse]
+	given fmtQueue: Format[Schema.Queue] = Json.format[Schema.Queue]
+	given fmtAppEngineRouting: Format[Schema.AppEngineRouting] = Json.format[Schema.AppEngineRouting]
+	given fmtHttpTarget: Format[Schema.HttpTarget] = Json.format[Schema.HttpTarget]
+	given fmtRateLimits: Format[Schema.RateLimits] = Json.format[Schema.RateLimits]
+	given fmtRetryConfig: Format[Schema.RetryConfig] = Json.format[Schema.RetryConfig]
+	given fmtQueueStateEnum: Format[Schema.Queue.StateEnum] = JsonEnumFormat[Schema.Queue.StateEnum]
+	given fmtStackdriverLoggingConfig: Format[Schema.StackdriverLoggingConfig] = Json.format[Schema.StackdriverLoggingConfig]
+	given fmtUriOverride: Format[Schema.UriOverride] = Json.format[Schema.UriOverride]
+	given fmtHttpTargetHttpMethodEnum: Format[Schema.HttpTarget.HttpMethodEnum] = JsonEnumFormat[Schema.HttpTarget.HttpMethodEnum]
+	given fmtHeaderOverride: Format[Schema.HeaderOverride] = Json.format[Schema.HeaderOverride]
+	given fmtOAuthToken: Format[Schema.OAuthToken] = Json.format[Schema.OAuthToken]
+	given fmtOidcToken: Format[Schema.OidcToken] = Json.format[Schema.OidcToken]
+	given fmtUriOverrideSchemeEnum: Format[Schema.UriOverride.SchemeEnum] = JsonEnumFormat[Schema.UriOverride.SchemeEnum]
+	given fmtPathOverride: Format[Schema.PathOverride] = Json.format[Schema.PathOverride]
+	given fmtQueryOverride: Format[Schema.QueryOverride] = Json.format[Schema.QueryOverride]
+	given fmtUriOverrideUriOverrideEnforceModeEnum: Format[Schema.UriOverride.UriOverrideEnforceModeEnum] = JsonEnumFormat[Schema.UriOverride.UriOverrideEnforceModeEnum]
+	given fmtHeader: Format[Schema.Header] = Json.format[Schema.Header]
+	given fmtEmpty: Format[Schema.Empty] = Json.format[Schema.Empty]
+	given fmtPurgeQueueRequest: Format[Schema.PurgeQueueRequest] = Json.format[Schema.PurgeQueueRequest]
+	given fmtPauseQueueRequest: Format[Schema.PauseQueueRequest] = Json.format[Schema.PauseQueueRequest]
+	given fmtResumeQueueRequest: Format[Schema.ResumeQueueRequest] = Json.format[Schema.ResumeQueueRequest]
+	given fmtGetIamPolicyRequest: Format[Schema.GetIamPolicyRequest] = Json.format[Schema.GetIamPolicyRequest]
+	given fmtGetPolicyOptions: Format[Schema.GetPolicyOptions] = Json.format[Schema.GetPolicyOptions]
+	given fmtPolicy: Format[Schema.Policy] = Json.format[Schema.Policy]
+	given fmtBinding: Format[Schema.Binding] = Json.format[Schema.Binding]
+	given fmtExpr: Format[Schema.Expr] = Json.format[Schema.Expr]
+	given fmtSetIamPolicyRequest: Format[Schema.SetIamPolicyRequest] = Json.format[Schema.SetIamPolicyRequest]
+	given fmtTestIamPermissionsRequest: Format[Schema.TestIamPermissionsRequest] = Json.format[Schema.TestIamPermissionsRequest]
+	given fmtTestIamPermissionsResponse: Format[Schema.TestIamPermissionsResponse] = Json.format[Schema.TestIamPermissionsResponse]
+	given fmtListTasksResponse: Format[Schema.ListTasksResponse] = Json.format[Schema.ListTasksResponse]
+	given fmtTask: Format[Schema.Task] = Json.format[Schema.Task]
+	given fmtAppEngineHttpRequest: Format[Schema.AppEngineHttpRequest] = Json.format[Schema.AppEngineHttpRequest]
+	given fmtHttpRequest: Format[Schema.HttpRequest] = Json.format[Schema.HttpRequest]
+	given fmtAttempt: Format[Schema.Attempt] = Json.format[Schema.Attempt]
+	given fmtTaskViewEnum: Format[Schema.Task.ViewEnum] = JsonEnumFormat[Schema.Task.ViewEnum]
+	given fmtAppEngineHttpRequestHttpMethodEnum: Format[Schema.AppEngineHttpRequest.HttpMethodEnum] = JsonEnumFormat[Schema.AppEngineHttpRequest.HttpMethodEnum]
+	given fmtHttpRequestHttpMethodEnum: Format[Schema.HttpRequest.HttpMethodEnum] = JsonEnumFormat[Schema.HttpRequest.HttpMethodEnum]
+	given fmtStatus: Format[Schema.Status] = Json.format[Schema.Status]
+	given fmtCreateTaskRequest: Format[Schema.CreateTaskRequest] = Json.format[Schema.CreateTaskRequest]
+	given fmtCreateTaskRequestResponseViewEnum: Format[Schema.CreateTaskRequest.ResponseViewEnum] = JsonEnumFormat[Schema.CreateTaskRequest.ResponseViewEnum]
+	given fmtRunTaskRequest: Format[Schema.RunTaskRequest] = Json.format[Schema.RunTaskRequest]
+	given fmtRunTaskRequestResponseViewEnum: Format[Schema.RunTaskRequest.ResponseViewEnum] = JsonEnumFormat[Schema.RunTaskRequest.ResponseViewEnum]
+	given fmtCmekConfig: Format[Schema.CmekConfig] = Json.format[Schema.CmekConfig]
+	given fmtBufferTaskRequest: Format[Schema.BufferTaskRequest] = Json.format[Schema.BufferTaskRequest]
+	given fmtHttpBody: Format[Schema.HttpBody] = Json.format[Schema.HttpBody]
+	given fmtBufferTaskResponse: Format[Schema.BufferTaskResponse] = Json.format[Schema.BufferTaskResponse]
+}
