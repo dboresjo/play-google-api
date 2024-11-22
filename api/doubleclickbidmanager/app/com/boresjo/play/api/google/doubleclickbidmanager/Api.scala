@@ -2,7 +2,7 @@ package com.boresjo.play.api.google.doubleclickbidmanager
 
 import play.api.libs.json.*
 import play.api.libs.ws.{WSClient, WSRequest}
-import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+import com.boresjo.play.api.{PlayApi, RequestSigner, JsonEnumFormat}
 
 import javax.inject.*
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,55 +12,80 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	import Formats.given
 	import play.api.libs.ws.writeableOf_JsValue
 
+	val scopes = Seq(
+		"""https://www.googleapis.com/auth/doubleclickbidmanager""" /* View and manage your reports in DoubleClick Bid Manager */
+	)
+
 	private val BASE_URL = "https://doubleclickbidmanager.googleapis.com/v2/"
 
 	object queries {
-		class run(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withRunQueryRequest(body: Schema.RunQueryRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Report])
+		/** Runs an existing query to generate a report. */
+		class run(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/doubleclickbidmanager""")
+			/** Perform the request */
+			def withRunQueryRequest(body: Schema.RunQueryRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Report])
 		}
 		object run {
-			def apply(queryId: String, synchronous: Boolean)(using auth: AuthToken, ec: ExecutionContext): run = new run(ws.url(BASE_URL + s"queries/${queryId}:run").addQueryStringParameters("synchronous" -> synchronous.toString))
+			def apply(queryId: String, synchronous: Boolean)(using signer: RequestSigner, ec: ExecutionContext): run = new run(ws.url(BASE_URL + s"queries/${queryId}:run").addQueryStringParameters("synchronous" -> synchronous.toString))
 		}
-		class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withQuery(body: Schema.Query) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Query])
+		/** Creates a new query. */
+		class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/doubleclickbidmanager""")
+			/** Perform the request */
+			def withQuery(body: Schema.Query) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Query])
 		}
 		object create {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"queries").addQueryStringParameters())
+			def apply()(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"queries").addQueryStringParameters())
 		}
-		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-			def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+		/** Deletes an existing query as well as its generated reports. */
+		class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/doubleclickbidmanager""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 		}
 		object delete {
-			def apply(queryId: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"queries/${queryId}").addQueryStringParameters())
+			def apply(queryId: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"queries/${queryId}").addQueryStringParameters())
 			given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 		}
-		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Query]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Query])
+		/** Retrieves a query. */
+		class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Query]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/doubleclickbidmanager""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Query])
 		}
 		object get {
-			def apply(queryId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"queries/${queryId}").addQueryStringParameters())
+			def apply(queryId: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"queries/${queryId}").addQueryStringParameters())
 			given Conversion[get, Future[Schema.Query]] = (fun: get) => fun.apply()
 		}
-		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListQueriesResponse]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListQueriesResponse])
+		/** Lists queries created by the current user. */
+		class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListQueriesResponse]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/doubleclickbidmanager""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListQueriesResponse])
 		}
 		object list {
-			def apply(pageSize: Int, pageToken: String, orderBy: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"queries").addQueryStringParameters("pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "orderBy" -> orderBy.toString))
+			def apply(pageSize: Int, pageToken: String, orderBy: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"queries").addQueryStringParameters("pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "orderBy" -> orderBy.toString))
 			given Conversion[list, Future[Schema.ListQueriesResponse]] = (fun: list) => fun.apply()
 		}
 		object reports {
-			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListReportsResponse]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListReportsResponse])
+			/** Lists reports generated by the provided query. */
+			class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListReportsResponse]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/doubleclickbidmanager""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListReportsResponse])
 			}
 			object list {
-				def apply(queryId: String, pageSize: Int, pageToken: String, orderBy: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"queries/${queryId}/reports").addQueryStringParameters("pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "orderBy" -> orderBy.toString))
+				def apply(queryId: String, pageSize: Int, pageToken: String, orderBy: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"queries/${queryId}/reports").addQueryStringParameters("pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "orderBy" -> orderBy.toString))
 				given Conversion[list, Future[Schema.ListReportsResponse]] = (fun: list) => fun.apply()
 			}
-			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Report]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Report])
+			/** Retrieves a report. */
+			class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Report]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/doubleclickbidmanager""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Report])
 			}
 			object get {
-				def apply(queryId: String, reportId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"queries/${queryId}/reports/${reportId}").addQueryStringParameters())
+				def apply(queryId: String, reportId: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"queries/${queryId}/reports/${reportId}").addQueryStringParameters())
 				given Conversion[get, Future[Schema.Report]] = (fun: get) => fun.apply()
 			}
 		}

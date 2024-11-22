@@ -2,7 +2,7 @@ package com.boresjo.play.api.google.calendar
 
 import play.api.libs.json.*
 import play.api.libs.ws.{WSClient, WSRequest}
-import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+import com.boresjo.play.api.{PlayApi, RequestSigner, JsonEnumFormat}
 
 import javax.inject.*
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,18 +12,31 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	import Formats.given
 	import play.api.libs.ws.writeableOf_JsValue
 
+	val scopes = Seq(
+		"""https://www.googleapis.com/auth/calendar""" /* See, edit, share, and permanently delete all the calendars you can access using Google Calendar */,
+		"""https://www.googleapis.com/auth/calendar.events""" /* View and edit events on all your calendars */,
+		"""https://www.googleapis.com/auth/calendar.events.readonly""" /* View events on all your calendars */,
+		"""https://www.googleapis.com/auth/calendar.readonly""" /* See and download any calendar you can access using your Google Calendar */,
+		"""https://www.googleapis.com/auth/calendar.settings.readonly""" /* View your Calendar settings */
+	)
+
 	private val BASE_URL = "https://www.googleapis.com/calendar/v3/"
 
 	object acl {
-		class insert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Creates an access control rule. */
+		class insert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
 			/** Whether to send notifications about the calendar sharing change. Optional. The default is True. */
 			def withSendNotifications(sendNotifications: Boolean) = new insert(req.addQueryStringParameters("sendNotifications" -> sendNotifications.toString))
-			def withAclRule(body: Schema.AclRule) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.AclRule])
+			/** Perform the request */
+			def withAclRule(body: Schema.AclRule) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.AclRule])
 		}
 		object insert {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"calendars/${calendarId}/acl").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"calendars/${calendarId}/acl").addQueryStringParameters())
 		}
-		class watch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Watch for changes to ACL resources. */
+		class watch(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
 			/** Maximum number of entries returned on one result page. By default the value is 100 entries. The page size can never be larger than 250 entries. Optional.<br>Format: int32 */
 			def withMaxResults(maxResults: Int) = new watch(req.addQueryStringParameters("maxResults" -> maxResults.toString))
 			/** Token specifying which result page to return. Optional. */
@@ -35,42 +48,57 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new watch(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def withChannel(body: Schema.Channel) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
+			/** Perform the request */
+			def withChannel(body: Schema.Channel) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
 		}
 		object watch {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"calendars/${calendarId}/acl/watch").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"calendars/${calendarId}/acl/watch").addQueryStringParameters())
 		}
-		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-			def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+		/** Deletes an access control rule. */
+		class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 		}
 		object delete {
-			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
+			def apply(calendarId: String, ruleId: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
 			given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 		}
-		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.AclRule]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.AclRule])
+		/** Returns an access control rule. */
+		class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.AclRule]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.readonly""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.AclRule])
 		}
 		object get {
-			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
+			def apply(calendarId: String, ruleId: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
 			given Conversion[get, Future[Schema.AclRule]] = (fun: get) => fun.apply()
 		}
-		class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Updates an access control rule. */
+		class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
 			/** Whether to send notifications about the calendar sharing change. Note that there are no notifications on access removal. Optional. The default is True. */
 			def withSendNotifications(sendNotifications: Boolean) = new update(req.addQueryStringParameters("sendNotifications" -> sendNotifications.toString))
-			def withAclRule(body: Schema.AclRule) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.AclRule])
+			/** Perform the request */
+			def withAclRule(body: Schema.AclRule) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.AclRule])
 		}
 		object update {
-			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
+			def apply(calendarId: String, ruleId: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
 		}
-		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Updates an access control rule. This method supports patch semantics. */
+		class patch(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
 			/** Whether to send notifications about the calendar sharing change. Note that there are no notifications on access removal. Optional. The default is True. */
 			def withSendNotifications(sendNotifications: Boolean) = new patch(req.addQueryStringParameters("sendNotifications" -> sendNotifications.toString))
-			def withAclRule(body: Schema.AclRule) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.AclRule])
+			/** Perform the request */
+			def withAclRule(body: Schema.AclRule) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.AclRule])
 		}
 		object patch {
-			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
+			def apply(calendarId: String, ruleId: String)(using signer: RequestSigner, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
 		}
-		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Acl]) {
+		/** Returns the rules in the access control list for the calendar. */
+		class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Acl]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
 			/** Maximum number of entries returned on one result page. By default the value is 100 entries. The page size can never be larger than 250 entries. Optional.<br>Format: int32 */
 			def withMaxResults(maxResults: Int) = new list(req.addQueryStringParameters("maxResults" -> maxResults.toString))
 			/** Token specifying which result page to return. Optional. */
@@ -82,23 +110,29 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new list(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Acl])
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Acl])
 		}
 		object list {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"calendars/${calendarId}/acl").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"calendars/${calendarId}/acl").addQueryStringParameters())
 			given Conversion[list, Future[Schema.Acl]] = (fun: list) => fun.apply()
 		}
 	}
 	object calendarList {
-		class insert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Inserts an existing calendar into the user's calendar list. */
+		class insert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
 			/** Whether to use the foregroundColor and backgroundColor fields to write the calendar colors (RGB). If this feature is used, the index-based colorId field will be set to the best matching option automatically. Optional. The default is False. */
 			def withColorRgbFormat(colorRgbFormat: Boolean) = new insert(req.addQueryStringParameters("colorRgbFormat" -> colorRgbFormat.toString))
-			def withCalendarListEntry(body: Schema.CalendarListEntry) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.CalendarListEntry])
+			/** Perform the request */
+			def withCalendarListEntry(body: Schema.CalendarListEntry) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.CalendarListEntry])
 		}
 		object insert {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"users/me/calendarList").addQueryStringParameters())
+			def apply()(using signer: RequestSigner, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"users/me/calendarList").addQueryStringParameters())
 		}
-		class watch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Watch for changes to CalendarList resources. */
+		class watch(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.readonly""")
 			/** Maximum number of entries returned on one result page. By default the value is 100 entries. The page size can never be larger than 250 entries. Optional.<br>Format: int32 */
 			def withMaxResults(maxResults: Int) = new watch(req.addQueryStringParameters("maxResults" -> maxResults.toString))
 			/** The minimum access role for the user in the returned entries. Optional. The default is no restriction.<br>Possible values:<br>freeBusyReader: The user can read free/busy information.<br>owner: The user can read and modify events and access control lists.<br>reader: The user can read events that are not private.<br>writer: The user can read and modify events. */
@@ -115,42 +149,57 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new watch(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def withChannel(body: Schema.Channel) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
+			/** Perform the request */
+			def withChannel(body: Schema.Channel) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
 		}
 		object watch {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"users/me/calendarList/watch").addQueryStringParameters())
+			def apply()(using signer: RequestSigner, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"users/me/calendarList/watch").addQueryStringParameters())
 		}
-		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-			def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+		/** Removes a calendar from the user's calendar list. */
+		class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 		}
 		object delete {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
 			given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 		}
-		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.CalendarListEntry]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.CalendarListEntry])
+		/** Returns a calendar from the user's calendar list. */
+		class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.CalendarListEntry]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.readonly""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.CalendarListEntry])
 		}
 		object get {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
 			given Conversion[get, Future[Schema.CalendarListEntry]] = (fun: get) => fun.apply()
 		}
-		class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Updates an existing calendar on the user's calendar list. */
+		class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
 			/** Whether to use the foregroundColor and backgroundColor fields to write the calendar colors (RGB). If this feature is used, the index-based colorId field will be set to the best matching option automatically. Optional. The default is False. */
 			def withColorRgbFormat(colorRgbFormat: Boolean) = new update(req.addQueryStringParameters("colorRgbFormat" -> colorRgbFormat.toString))
-			def withCalendarListEntry(body: Schema.CalendarListEntry) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.CalendarListEntry])
+			/** Perform the request */
+			def withCalendarListEntry(body: Schema.CalendarListEntry) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.CalendarListEntry])
 		}
 		object update {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
 		}
-		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Updates an existing calendar on the user's calendar list. This method supports patch semantics. */
+		class patch(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
 			/** Whether to use the foregroundColor and backgroundColor fields to write the calendar colors (RGB). If this feature is used, the index-based colorId field will be set to the best matching option automatically. Optional. The default is False. */
 			def withColorRgbFormat(colorRgbFormat: Boolean) = new patch(req.addQueryStringParameters("colorRgbFormat" -> colorRgbFormat.toString))
-			def withCalendarListEntry(body: Schema.CalendarListEntry) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.CalendarListEntry])
+			/** Perform the request */
+			def withCalendarListEntry(body: Schema.CalendarListEntry) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.CalendarListEntry])
 		}
 		object patch {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
 		}
-		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.CalendarList]) {
+		/** Returns the calendars on the user's calendar list. */
+		class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.CalendarList]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.readonly""")
 			/** Maximum number of entries returned on one result page. By default the value is 100 entries. The page size can never be larger than 250 entries. Optional.<br>Format: int32 */
 			def withMaxResults(maxResults: Int) = new list(req.addQueryStringParameters("maxResults" -> maxResults.toString))
 			/** The minimum access role for the user in the returned entries. Optional. The default is no restriction.<br>Possible values:<br>freeBusyReader: The user can read free/busy information.<br>owner: The user can read and modify events and access control lists.<br>reader: The user can read events that are not private.<br>writer: The user can read and modify events. */
@@ -167,143 +216,195 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new list(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.CalendarList])
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.CalendarList])
 		}
 		object list {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"users/me/calendarList").addQueryStringParameters())
+			def apply()(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"users/me/calendarList").addQueryStringParameters())
 			given Conversion[list, Future[Schema.CalendarList]] = (fun: list) => fun.apply()
 		}
 	}
 	object calendars {
-		class insert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withCalendar(body: Schema.Calendar) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Calendar])
+		/** Creates a secondary calendar. */
+		class insert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
+			/** Perform the request */
+			def withCalendar(body: Schema.Calendar) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Calendar])
 		}
 		object insert {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"calendars").addQueryStringParameters())
+			def apply()(using signer: RequestSigner, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"calendars").addQueryStringParameters())
 		}
-		class clear(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-			def apply() = auth.exec(req,_.execute("POST")).map(_ => ())
+		/** Clears a primary calendar. This operation deletes all events associated with the primary calendar of an account. */
+		class clear(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_ => ())
 		}
 		object clear {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): clear = new clear(ws.url(BASE_URL + s"calendars/${calendarId}/clear").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): clear = new clear(ws.url(BASE_URL + s"calendars/${calendarId}/clear").addQueryStringParameters())
 			given Conversion[clear, Future[Unit]] = (fun: clear) => fun.apply()
 		}
-		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-			def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+		/** Deletes a secondary calendar. Use calendars.clear for clearing all events on primary calendars. */
+		class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 		}
 		object delete {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
 			given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 		}
-		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Calendar]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Calendar])
+		/** Returns metadata for a calendar. */
+		class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Calendar]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.readonly""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Calendar])
 		}
 		object get {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
 			given Conversion[get, Future[Schema.Calendar]] = (fun: get) => fun.apply()
 		}
-		class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withCalendar(body: Schema.Calendar) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Calendar])
+		/** Updates metadata for a calendar. */
+		class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
+			/** Perform the request */
+			def withCalendar(body: Schema.Calendar) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Calendar])
 		}
 		object update {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
 		}
-		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withCalendar(body: Schema.Calendar) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Calendar])
+		/** Updates metadata for a calendar. This method supports patch semantics. */
+		class patch(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""")
+			/** Perform the request */
+			def withCalendar(body: Schema.Calendar) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Calendar])
 		}
 		object patch {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
+			def apply(calendarId: String)(using signer: RequestSigner, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
 		}
 	}
 	object channels {
-		class stop(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withChannel(body: Schema.Channel) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_ => ())
+		/** Stop watching resources through this channel */
+		class stop(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""", """https://www.googleapis.com/auth/calendar.events.readonly""", """https://www.googleapis.com/auth/calendar.readonly""", """https://www.googleapis.com/auth/calendar.settings.readonly""")
+			/** Perform the request */
+			def withChannel(body: Schema.Channel) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_ => ())
 		}
 		object stop {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): stop = new stop(ws.url(BASE_URL + s"channels/stop").addQueryStringParameters())
+			def apply()(using signer: RequestSigner, ec: ExecutionContext): stop = new stop(ws.url(BASE_URL + s"channels/stop").addQueryStringParameters())
 		}
 	}
 	object colors {
-		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Colors]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Colors])
+		/** Returns the color definitions for calendars and events. */
+		class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Colors]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.readonly""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Colors])
 		}
 		object get {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"colors").addQueryStringParameters())
+			def apply()(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"colors").addQueryStringParameters())
 			given Conversion[get, Future[Schema.Colors]] = (fun: get) => fun.apply()
 		}
 	}
 	object events {
-		class move(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Event]) {
-			def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.Event])
+		/** Moves an event to another calendar, i.e. changes an event's organizer. Note that only default events can be moved; birthday, focusTime, fromGmail, outOfOffice and workingLocation events cannot be moved. */
+		class move(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Event]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.Event])
 		}
 		object move {
-			def apply(calendarId: String, destination: String, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): move = new move(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}/move").addQueryStringParameters("destination" -> destination.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
+			def apply(calendarId: String, destination: String, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using signer: RequestSigner, ec: ExecutionContext): move = new move(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}/move").addQueryStringParameters("destination" -> destination.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
 			given Conversion[move, Future[Schema.Event]] = (fun: move) => fun.apply()
 		}
-		class insert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Creates an event. */
+		class insert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""")
 			/** The maximum number of attendees to include in the response. If there are more than the specified number of attendees, only the participant is returned. Optional.<br>Format: int32 */
 			def withMaxAttendees(maxAttendees: Int) = new insert(req.addQueryStringParameters("maxAttendees" -> maxAttendees.toString))
 			/** Whether API client performing operation supports event attachments. Optional. The default is False. */
 			def withSupportsAttachments(supportsAttachments: Boolean) = new insert(req.addQueryStringParameters("supportsAttachments" -> supportsAttachments.toString))
-			def withEvent(body: Schema.Event) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Event])
+			/** Perform the request */
+			def withEvent(body: Schema.Event) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Event])
 		}
 		object insert {
-			def apply(calendarId: String, conferenceDataVersion: Int, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"calendars/${calendarId}/events").addQueryStringParameters("conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
+			def apply(calendarId: String, conferenceDataVersion: Int, sendNotifications: Boolean, sendUpdates: String)(using signer: RequestSigner, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"calendars/${calendarId}/events").addQueryStringParameters("conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
 		}
-		class quickAdd(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Event]) {
-			def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.Event])
+		/** Creates an event based on a simple text string. */
+		class quickAdd(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Event]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.Event])
 		}
 		object quickAdd {
-			def apply(calendarId: String, sendNotifications: Boolean, sendUpdates: String, text: String)(using auth: AuthToken, ec: ExecutionContext): quickAdd = new quickAdd(ws.url(BASE_URL + s"calendars/${calendarId}/events/quickAdd").addQueryStringParameters("sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString, "text" -> text.toString))
+			def apply(calendarId: String, sendNotifications: Boolean, sendUpdates: String, text: String)(using signer: RequestSigner, ec: ExecutionContext): quickAdd = new quickAdd(ws.url(BASE_URL + s"calendars/${calendarId}/events/quickAdd").addQueryStringParameters("sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString, "text" -> text.toString))
 			given Conversion[quickAdd, Future[Schema.Event]] = (fun: quickAdd) => fun.apply()
 		}
-		class `import`(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Imports an event. This operation is used to add a private copy of an existing event to a calendar. Only events with an eventType of default may be imported.
+Deprecated behavior: If a non-default event is imported, its type will be changed to default and any event-type-specific properties it may have will be dropped. */
+		class `import`(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""")
 			/** Whether API client performing operation supports event attachments. Optional. The default is False. */
 			def withSupportsAttachments(supportsAttachments: Boolean) = new `import`(req.addQueryStringParameters("supportsAttachments" -> supportsAttachments.toString))
-			def withEvent(body: Schema.Event) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Event])
+			/** Perform the request */
+			def withEvent(body: Schema.Event) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Event])
 		}
 		object `import` {
-			def apply(calendarId: String, conferenceDataVersion: Int)(using auth: AuthToken, ec: ExecutionContext): `import` = new `import`(ws.url(BASE_URL + s"calendars/${calendarId}/events/import").addQueryStringParameters("conferenceDataVersion" -> conferenceDataVersion.toString))
+			def apply(calendarId: String, conferenceDataVersion: Int)(using signer: RequestSigner, ec: ExecutionContext): `import` = new `import`(ws.url(BASE_URL + s"calendars/${calendarId}/events/import").addQueryStringParameters("conferenceDataVersion" -> conferenceDataVersion.toString))
 		}
-		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-			def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+		/** Deletes an event. */
+		class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 		}
 		object delete {
-			def apply(calendarId: String, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
+			def apply(calendarId: String, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
 			given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 		}
-		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Event]) {
+		/** Returns an event based on its Google Calendar ID. To retrieve an event using its iCalendar ID, call the events.list method using the iCalUID parameter. */
+		class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Event]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""", """https://www.googleapis.com/auth/calendar.events.readonly""", """https://www.googleapis.com/auth/calendar.readonly""")
 			/** The maximum number of attendees to include in the response. If there are more than the specified number of attendees, only the participant is returned. Optional.<br>Format: int32 */
 			def withMaxAttendees(maxAttendees: Int) = new get(req.addQueryStringParameters("maxAttendees" -> maxAttendees.toString))
 			/** Time zone used in the response. Optional. The default is the time zone of the calendar. */
 			def withTimeZone(timeZone: String) = new get(req.addQueryStringParameters("timeZone" -> timeZone.toString))
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Event])
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Event])
 		}
 		object get {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, eventId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, eventId: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString))
 			given Conversion[get, Future[Schema.Event]] = (fun: get) => fun.apply()
 		}
-		class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Updates an event. */
+		class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""")
 			/** The maximum number of attendees to include in the response. If there are more than the specified number of attendees, only the participant is returned. Optional.<br>Format: int32 */
 			def withMaxAttendees(maxAttendees: Int) = new update(req.addQueryStringParameters("maxAttendees" -> maxAttendees.toString))
 			/** Whether API client performing operation supports event attachments. Optional. The default is False. */
 			def withSupportsAttachments(supportsAttachments: Boolean) = new update(req.addQueryStringParameters("supportsAttachments" -> supportsAttachments.toString))
-			def withEvent(body: Schema.Event) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Event])
+			/** Perform the request */
+			def withEvent(body: Schema.Event) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Event])
 		}
 		object update {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, conferenceDataVersion: Int, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, conferenceDataVersion: Int, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
 		}
-		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Updates an event. This method supports patch semantics. */
+		class patch(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""")
 			/** The maximum number of attendees to include in the response. If there are more than the specified number of attendees, only the participant is returned. Optional.<br>Format: int32 */
 			def withMaxAttendees(maxAttendees: Int) = new patch(req.addQueryStringParameters("maxAttendees" -> maxAttendees.toString))
 			/** Whether API client performing operation supports event attachments. Optional. The default is False. */
 			def withSupportsAttachments(supportsAttachments: Boolean) = new patch(req.addQueryStringParameters("supportsAttachments" -> supportsAttachments.toString))
-			def withEvent(body: Schema.Event) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Event])
+			/** Perform the request */
+			def withEvent(body: Schema.Event) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Event])
 		}
 		object patch {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, conferenceDataVersion: Int, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, conferenceDataVersion: Int, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using signer: RequestSigner, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
 		}
-		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Events]) {
+		/** Returns events on the specified calendar. */
+		class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Events]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""", """https://www.googleapis.com/auth/calendar.events.readonly""", """https://www.googleapis.com/auth/calendar.readonly""")
 			/** Event types to return. Optional. This parameter can be repeated multiple times to return events of different types. If unset, returns all event types.<br>Possible values:<br>birthday: Special all-day events with an annual recurrence.<br>default: Regular events.<br>focusTime: Focus time events.<br>fromGmail: Events from Gmail.<br>outOfOffice: Out of office events.<br>workingLocation: Working location events. */
 			def withEventTypes(eventTypes: String) = new list(req.addQueryStringParameters("eventTypes" -> eventTypes.toString))
 			/** Specifies an event ID in the iCalendar format to be provided in the response. Optional. Use this if you want to search for an event by its iCalendar ID. */
@@ -360,13 +461,16 @@ Optional. The default is to return all entries. */
 			def withTimeZone(timeZone: String) = new list(req.addQueryStringParameters("timeZone" -> timeZone.toString))
 			/** Lower bound for an event's last modification time (as a RFC3339 timestamp) to filter by. When specified, entries deleted since this time will always be included regardless of showDeleted. Optional. The default is not to filter by last modification time.<br>Format: date-time */
 			def withUpdatedMin(updatedMin: String) = new list(req.addQueryStringParameters("updatedMin" -> updatedMin.toString))
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Events])
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Events])
 		}
 		object list {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, privateExtendedProperty: String, sharedExtendedProperty: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"calendars/${calendarId}/events").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "privateExtendedProperty" -> privateExtendedProperty.toString, "sharedExtendedProperty" -> sharedExtendedProperty.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, privateExtendedProperty: String, sharedExtendedProperty: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"calendars/${calendarId}/events").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "privateExtendedProperty" -> privateExtendedProperty.toString, "sharedExtendedProperty" -> sharedExtendedProperty.toString))
 			given Conversion[list, Future[Schema.Events]] = (fun: list) => fun.apply()
 		}
-		class watch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Watch for changes to Events resources. */
+		class watch(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""", """https://www.googleapis.com/auth/calendar.events.readonly""", """https://www.googleapis.com/auth/calendar.readonly""")
 			/** Event types to return. Optional. This parameter can be repeated multiple times to return events of different types. If unset, returns all event types.<br>Possible values:<br>birthday: Special all-day events with an annual recurrence.<br>default: Regular events.<br>focusTime: Focus time events.<br>fromGmail: Events from Gmail.<br>outOfOffice: Out of office events.<br>workingLocation: Working location events. */
 			def withEventTypes(eventTypes: String) = new watch(req.addQueryStringParameters("eventTypes" -> eventTypes.toString))
 			/** Specifies an event ID in the iCalendar format to be provided in the response. Optional. Use this if you want to search for an event by its iCalendar ID. */
@@ -423,12 +527,15 @@ Optional. The default is to return all entries. */
 			def withTimeZone(timeZone: String) = new watch(req.addQueryStringParameters("timeZone" -> timeZone.toString))
 			/** Lower bound for an event's last modification time (as a RFC3339 timestamp) to filter by. When specified, entries deleted since this time will always be included regardless of showDeleted. Optional. The default is not to filter by last modification time.<br>Format: date-time */
 			def withUpdatedMin(updatedMin: String) = new watch(req.addQueryStringParameters("updatedMin" -> updatedMin.toString))
-			def withChannel(body: Schema.Channel) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
+			/** Perform the request */
+			def withChannel(body: Schema.Channel) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
 		}
 		object watch {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, privateExtendedProperty: String, sharedExtendedProperty: String)(using auth: AuthToken, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"calendars/${calendarId}/events/watch").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "privateExtendedProperty" -> privateExtendedProperty.toString, "sharedExtendedProperty" -> sharedExtendedProperty.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, privateExtendedProperty: String, sharedExtendedProperty: String)(using signer: RequestSigner, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"calendars/${calendarId}/events/watch").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "privateExtendedProperty" -> privateExtendedProperty.toString, "sharedExtendedProperty" -> sharedExtendedProperty.toString))
 		}
-		class instances(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Events]) {
+		/** Returns instances of the specified recurring event. */
+		class instances(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Events]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.events""", """https://www.googleapis.com/auth/calendar.events.readonly""", """https://www.googleapis.com/auth/calendar.readonly""")
 			/** The maximum number of attendees to include in the response. If there are more than the specified number of attendees, only the participant is returned. Optional.<br>Format: int32 */
 			def withMaxAttendees(maxAttendees: Int) = new instances(req.addQueryStringParameters("maxAttendees" -> maxAttendees.toString))
 			/** Maximum number of events returned on one result page. By default the value is 250 events. The page size can never be larger than 2500 events. Optional.<br>Format: int32 */
@@ -445,30 +552,39 @@ Optional. The default is to return all entries. */
 			def withTimeMin(timeMin: String) = new instances(req.addQueryStringParameters("timeMin" -> timeMin.toString))
 			/** Time zone used in the response. Optional. The default is the time zone of the calendar. */
 			def withTimeZone(timeZone: String) = new instances(req.addQueryStringParameters("timeZone" -> timeZone.toString))
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Events])
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Events])
 		}
 		object instances {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, eventId: String)(using auth: AuthToken, ec: ExecutionContext): instances = new instances(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}/instances").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, eventId: String)(using signer: RequestSigner, ec: ExecutionContext): instances = new instances(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}/instances").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString))
 			given Conversion[instances, Future[Schema.Events]] = (fun: instances) => fun.apply()
 		}
 	}
 	object freebusy {
-		class query(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withFreeBusyRequest(body: Schema.FreeBusyRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.FreeBusyResponse])
+		/** Returns free/busy information for a set of calendars. */
+		class query(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.readonly""")
+			/** Perform the request */
+			def withFreeBusyRequest(body: Schema.FreeBusyRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.FreeBusyResponse])
 		}
 		object query {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"freeBusy").addQueryStringParameters())
+			def apply()(using signer: RequestSigner, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"freeBusy").addQueryStringParameters())
 		}
 	}
 	object settings {
-		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Setting]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Setting])
+		/** Returns a single user setting. */
+		class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Setting]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.readonly""", """https://www.googleapis.com/auth/calendar.settings.readonly""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Setting])
 		}
 		object get {
-			def apply(setting: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"users/me/settings/${setting}").addQueryStringParameters())
+			def apply(setting: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"users/me/settings/${setting}").addQueryStringParameters())
 			given Conversion[get, Future[Schema.Setting]] = (fun: get) => fun.apply()
 		}
-		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Settings]) {
+		/** Returns all user settings for the authenticated user. */
+		class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Settings]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.readonly""", """https://www.googleapis.com/auth/calendar.settings.readonly""")
 			/** Maximum number of entries returned on one result page. By default the value is 100 entries. The page size can never be larger than 250 entries. Optional.<br>Format: int32 */
 			def withMaxResults(maxResults: Int) = new list(req.addQueryStringParameters("maxResults" -> maxResults.toString))
 			/** Token specifying which result page to return. Optional. */
@@ -478,13 +594,16 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new list(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Settings])
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Settings])
 		}
 		object list {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"users/me/settings").addQueryStringParameters())
+			def apply()(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"users/me/settings").addQueryStringParameters())
 			given Conversion[list, Future[Schema.Settings]] = (fun: list) => fun.apply()
 		}
-		class watch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
+		/** Watch for changes to Settings resources. */
+		class watch(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/calendar""", """https://www.googleapis.com/auth/calendar.readonly""", """https://www.googleapis.com/auth/calendar.settings.readonly""")
 			/** Maximum number of entries returned on one result page. By default the value is 100 entries. The page size can never be larger than 250 entries. Optional.<br>Format: int32 */
 			def withMaxResults(maxResults: Int) = new watch(req.addQueryStringParameters("maxResults" -> maxResults.toString))
 			/** Token specifying which result page to return. Optional. */
@@ -494,10 +613,11 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new watch(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def withChannel(body: Schema.Channel) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
+			/** Perform the request */
+			def withChannel(body: Schema.Channel) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
 		}
 		object watch {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"users/me/settings/watch").addQueryStringParameters())
+			def apply()(using signer: RequestSigner, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"users/me/settings/watch").addQueryStringParameters())
 		}
 	}
 }

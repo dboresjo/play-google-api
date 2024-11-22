@@ -2,7 +2,7 @@ package com.boresjo.play.api.google.solar
 
 import play.api.libs.json.*
 import play.api.libs.ws.{WSClient, WSRequest}
-import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+import com.boresjo.play.api.{PlayApi, RequestSigner, JsonEnumFormat}
 
 import javax.inject.*
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,32 +12,44 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	import Formats.given
 	import play.api.libs.ws.writeableOf_JsValue
 
+	val scopes = Seq(
+		"""https://www.googleapis.com/auth/cloud-platform""" /* See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account. */
+	)
+
 	private val BASE_URL = "https://solar.googleapis.com/"
 
 	object buildingInsights {
-		class findClosest(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.BuildingInsights]) {
+		/** Locates the closest building to a query point. Returns an error with code `NOT_FOUND` if there are no buildings within approximately 50m of the query point. */
+		class findClosest(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.BuildingInsights]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
 			/** Optional. Specifies the pre-GA features to enable.<br>Possible values:<br>EXPERIMENT_UNSPECIFIED: No experiments are specified.<br>EXPANDED_COVERAGE: Expands the geographic region available for querying solar data. */
 			def withExperiments(experiments: String) = new findClosest(req.addQueryStringParameters("experiments" -> experiments.toString))
 			/** Optional. The minimum quality level allowed in the results. No result with lower quality than this will be returned. Not specifying this is equivalent to restricting to HIGH quality only.<br>Possible values:<br>IMAGERY_QUALITY_UNSPECIFIED: No quality is known.<br>HIGH: Solar data is derived from aerial imagery captured at low-altitude and processed at 0.1 m/pixel.<br>MEDIUM: Solar data is derived from enhanced aerial imagery captured at high-altitude and processed at 0.25 m/pixel.<br>LOW: Solar data is derived from enhanced satellite imagery processed at 0.25 m/pixel.<br>BASE: Solar data is derived from enhanced satellite imagery processed at 0.25 m/pixel. */
 			def withRequiredQuality(requiredQuality: String) = new findClosest(req.addQueryStringParameters("requiredQuality" -> requiredQuality.toString))
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.BuildingInsights])
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.BuildingInsights])
 		}
 		object findClosest {
-			def apply(locationLongitude: Number, locationLatitude: Number)(using auth: AuthToken, ec: ExecutionContext): findClosest = new findClosest(ws.url(BASE_URL + s"v1/buildingInsights:findClosest").addQueryStringParameters("location.longitude" -> locationLongitude.toString, "location.latitude" -> locationLatitude.toString))
+			def apply(locationLongitude: Number, locationLatitude: Number)(using signer: RequestSigner, ec: ExecutionContext): findClosest = new findClosest(ws.url(BASE_URL + s"v1/buildingInsights:findClosest").addQueryStringParameters("location.longitude" -> locationLongitude.toString, "location.latitude" -> locationLatitude.toString))
 			given Conversion[findClosest, Future[Schema.BuildingInsights]] = (fun: findClosest) => fun.apply()
 		}
 	}
 	object geoTiff {
-		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.HttpBody]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.HttpBody])
+		/** Returns an image by its ID. */
+		class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.HttpBody]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.HttpBody])
 		}
 		object get {
-			def apply(id: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/geoTiff:get").addQueryStringParameters("id" -> id.toString))
+			def apply(id: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/geoTiff:get").addQueryStringParameters("id" -> id.toString))
 			given Conversion[get, Future[Schema.HttpBody]] = (fun: get) => fun.apply()
 		}
 	}
 	object dataLayers {
-		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.DataLayers]) {
+		/** Gets solar information for a region surrounding a location. Returns an error with code `NOT_FOUND` if the location is outside the coverage area. */
+		class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.DataLayers]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
 			/** Optional. The minimum quality level allowed in the results. No result with lower quality than this will be returned. Not specifying this is equivalent to restricting to HIGH quality only.<br>Possible values:<br>IMAGERY_QUALITY_UNSPECIFIED: No quality is known.<br>HIGH: Solar data is derived from aerial imagery captured at low-altitude and processed at 0.1 m/pixel.<br>MEDIUM: Solar data is derived from enhanced aerial imagery captured at high-altitude and processed at 0.25 m/pixel.<br>LOW: Solar data is derived from enhanced satellite imagery processed at 0.25 m/pixel.<br>BASE: Solar data is derived from enhanced satellite imagery processed at 0.25 m/pixel. */
 			def withRequiredQuality(requiredQuality: String) = new get(req.addQueryStringParameters("requiredQuality" -> requiredQuality.toString))
 			/** Optional. The desired subset of the data to return.<br>Possible values:<br>DATA_LAYER_VIEW_UNSPECIFIED: Equivalent to FULL.<br>DSM_LAYER: Get the DSM only.<br>IMAGERY_LAYERS: Get the DSM, RGB, and mask.<br>IMAGERY_AND_ANNUAL_FLUX_LAYERS: Get the DSM, RGB, mask, and annual flux.<br>IMAGERY_AND_ALL_FLUX_LAYERS: Get the DSM, RGB, mask, annual flux, and monthly flux.<br>FULL_LAYERS: Get all data. */
@@ -48,10 +60,11 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			def withPixelSizeMeters(pixelSizeMeters: Number) = new get(req.addQueryStringParameters("pixelSizeMeters" -> pixelSizeMeters.toString))
 			/** Optional. Specifies the pre-GA experiments to enable.<br>Possible values:<br>EXPERIMENT_UNSPECIFIED: No experiments are specified.<br>EXPANDED_COVERAGE: Expands the geographic region available for querying solar data. */
 			def withExperiments(experiments: String) = new get(req.addQueryStringParameters("experiments" -> experiments.toString))
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.DataLayers])
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.DataLayers])
 		}
 		object get {
-			def apply(radiusMeters: Number, locationLatitude: Number, locationLongitude: Number)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/dataLayers:get").addQueryStringParameters("radiusMeters" -> radiusMeters.toString, "location.latitude" -> locationLatitude.toString, "location.longitude" -> locationLongitude.toString))
+			def apply(radiusMeters: Number, locationLatitude: Number, locationLongitude: Number)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/dataLayers:get").addQueryStringParameters("radiusMeters" -> radiusMeters.toString, "location.latitude" -> locationLatitude.toString, "location.longitude" -> locationLongitude.toString))
 			given Conversion[get, Future[Schema.DataLayers]] = (fun: get) => fun.apply()
 		}
 	}

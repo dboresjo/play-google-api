@@ -2,7 +2,7 @@ package com.boresjo.play.api.google.playdeveloperreporting
 
 import play.api.libs.json.*
 import play.api.libs.ws.{WSClient, WSRequest}
-import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+import com.boresjo.play.api.{PlayApi, RequestSigner, JsonEnumFormat}
 
 import javax.inject.*
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,73 +12,103 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	import Formats.given
 	import play.api.libs.ws.writeableOf_JsValue
 
+	val scopes = Seq(
+		"""https://www.googleapis.com/auth/playdeveloperreporting""" /* See metrics and data about the apps in your Google Play Developer account */
+	)
+
 	private val BASE_URL = "https://playdeveloperreporting.googleapis.com/"
 
 	object apps {
-		class search(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1SearchAccessibleAppsResponse]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1SearchAccessibleAppsResponse])
+		/** Searches for Apps accessible by the user. */
+		class search(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1SearchAccessibleAppsResponse]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1SearchAccessibleAppsResponse])
 		}
 		object search {
-			def apply(pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): search = new search(ws.url(BASE_URL + s"v1beta1/apps:search").addQueryStringParameters("pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+			def apply(pageSize: Int, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): search = new search(ws.url(BASE_URL + s"v1beta1/apps:search").addQueryStringParameters("pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 			given Conversion[search, Future[Schema.GooglePlayDeveloperReportingV1beta1SearchAccessibleAppsResponse]] = (fun: search) => fun.apply()
 		}
-		class fetchReleaseFilterOptions(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1ReleaseFilterOptions]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1ReleaseFilterOptions])
+		/** Describes filtering options for releases. */
+		class fetchReleaseFilterOptions(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1ReleaseFilterOptions]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1ReleaseFilterOptions])
 		}
 		object fetchReleaseFilterOptions {
-			def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): fetchReleaseFilterOptions = new fetchReleaseFilterOptions(ws.url(BASE_URL + s"v1beta1/apps/${appsId}:fetchReleaseFilterOptions").addQueryStringParameters("name" -> name.toString))
+			def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): fetchReleaseFilterOptions = new fetchReleaseFilterOptions(ws.url(BASE_URL + s"v1beta1/apps/${appsId}:fetchReleaseFilterOptions").addQueryStringParameters("name" -> name.toString))
 			given Conversion[fetchReleaseFilterOptions, Future[Schema.GooglePlayDeveloperReportingV1beta1ReleaseFilterOptions]] = (fun: fetchReleaseFilterOptions) => fun.apply()
 		}
 	}
 	object vitals {
 		object anrrate {
-			class query(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGooglePlayDeveloperReportingV1beta1QueryAnrRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QueryAnrRateMetricSetRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QueryAnrRateMetricSetResponse])
+			/** Queries the metrics in the metric set. */
+			class query(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def withGooglePlayDeveloperReportingV1beta1QueryAnrRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QueryAnrRateMetricSetRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QueryAnrRateMetricSetResponse])
 			}
 			object query {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/anrRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/anrRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
 			}
-			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1AnrRateMetricSet]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1AnrRateMetricSet])
+			/** Describes the properties of the metric set. */
+			class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1AnrRateMetricSet]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1AnrRateMetricSet])
 			}
 			object get {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/anrRateMetricSet").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/anrRateMetricSet").addQueryStringParameters("name" -> name.toString))
 				given Conversion[get, Future[Schema.GooglePlayDeveloperReportingV1beta1AnrRateMetricSet]] = (fun: get) => fun.apply()
 			}
 		}
 		object stuckbackgroundwakelockrate {
-			class query(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGooglePlayDeveloperReportingV1beta1QueryStuckBackgroundWakelockRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QueryStuckBackgroundWakelockRateMetricSetRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QueryStuckBackgroundWakelockRateMetricSetResponse])
+			/** Queries the metrics in the metric set. */
+			class query(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def withGooglePlayDeveloperReportingV1beta1QueryStuckBackgroundWakelockRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QueryStuckBackgroundWakelockRateMetricSetRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QueryStuckBackgroundWakelockRateMetricSetResponse])
 			}
 			object query {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/stuckBackgroundWakelockRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/stuckBackgroundWakelockRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
 			}
-			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1StuckBackgroundWakelockRateMetricSet]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1StuckBackgroundWakelockRateMetricSet])
+			/** Describes the properties of the metric set. */
+			class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1StuckBackgroundWakelockRateMetricSet]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1StuckBackgroundWakelockRateMetricSet])
 			}
 			object get {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/stuckBackgroundWakelockRateMetricSet").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/stuckBackgroundWakelockRateMetricSet").addQueryStringParameters("name" -> name.toString))
 				given Conversion[get, Future[Schema.GooglePlayDeveloperReportingV1beta1StuckBackgroundWakelockRateMetricSet]] = (fun: get) => fun.apply()
 			}
 		}
 		object errors {
 			object counts {
-				class query(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withGooglePlayDeveloperReportingV1beta1QueryErrorCountMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QueryErrorCountMetricSetRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QueryErrorCountMetricSetResponse])
+				/** Queries the metrics in the metrics set. */
+				class query(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+					/** Perform the request */
+					def withGooglePlayDeveloperReportingV1beta1QueryErrorCountMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QueryErrorCountMetricSetRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QueryErrorCountMetricSetResponse])
 				}
 				object query {
-					def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/errorCountMetricSet:query").addQueryStringParameters("name" -> name.toString))
+					def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/errorCountMetricSet:query").addQueryStringParameters("name" -> name.toString))
 				}
-				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1ErrorCountMetricSet]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1ErrorCountMetricSet])
+				/** Describes the properties of the metrics set. */
+				class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1ErrorCountMetricSet]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1ErrorCountMetricSet])
 				}
 				object get {
-					def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/errorCountMetricSet").addQueryStringParameters("name" -> name.toString))
+					def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/errorCountMetricSet").addQueryStringParameters("name" -> name.toString))
 					given Conversion[get, Future[Schema.GooglePlayDeveloperReportingV1beta1ErrorCountMetricSet]] = (fun: get) => fun.apply()
 				}
 			}
 			object reports {
-				class search(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1SearchErrorReportsResponse]) {
+				/** Searches all error reports received for an app. */
+				class search(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1SearchErrorReportsResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
 					/** Optional. Year of date. Must be from 1 to 9999, or 0 if specifying a datetime without a year.<br>Format: int32 */
 					def withIntervalEndTimeYear(intervalEndTimeYear: Int) = new search(req.addQueryStringParameters("interval.endTime.year" -> intervalEndTimeYear.toString))
 					/** Optional. Minutes of hour of day. Must be from 0 to 59, defaults to 0.<br>Format: int32 */
@@ -111,15 +141,18 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 					def withIntervalStartTimeMonth(intervalStartTimeMonth: Int) = new search(req.addQueryStringParameters("interval.startTime.month" -> intervalStartTimeMonth.toString))
 					/** Optional. Fractions of seconds in nanoseconds. Must be from 0 to 999,999,999, defaults to 0.<br>Format: int32 */
 					def withIntervalStartTimeNanos(intervalStartTimeNanos: Int) = new search(req.addQueryStringParameters("interval.startTime.nanos" -> intervalStartTimeNanos.toString))
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1SearchErrorReportsResponse])
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1SearchErrorReportsResponse])
 				}
 				object search {
-					def apply(appsId :PlayApi, intervalStartTimeTimeZoneId: String, intervalStartTimeUtcOffset: String, intervalEndTimeUtcOffset: String, intervalEndTimeTimeZoneId: String, filter: String, pageToken: String, parent: String, pageSize: Int)(using auth: AuthToken, ec: ExecutionContext): search = new search(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/errorReports:search").addQueryStringParameters("interval.startTime.timeZone.id" -> intervalStartTimeTimeZoneId.toString, "interval.startTime.utcOffset" -> intervalStartTimeUtcOffset.toString, "interval.endTime.utcOffset" -> intervalEndTimeUtcOffset.toString, "interval.endTime.timeZone.id" -> intervalEndTimeTimeZoneId.toString, "filter" -> filter.toString, "pageToken" -> pageToken.toString, "parent" -> parent.toString, "pageSize" -> pageSize.toString))
+					def apply(appsId :PlayApi, intervalStartTimeTimeZoneId: String, intervalStartTimeUtcOffset: String, intervalEndTimeUtcOffset: String, intervalEndTimeTimeZoneId: String, filter: String, pageToken: String, parent: String, pageSize: Int)(using signer: RequestSigner, ec: ExecutionContext): search = new search(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/errorReports:search").addQueryStringParameters("interval.startTime.timeZone.id" -> intervalStartTimeTimeZoneId.toString, "interval.startTime.utcOffset" -> intervalStartTimeUtcOffset.toString, "interval.endTime.utcOffset" -> intervalEndTimeUtcOffset.toString, "interval.endTime.timeZone.id" -> intervalEndTimeTimeZoneId.toString, "filter" -> filter.toString, "pageToken" -> pageToken.toString, "parent" -> parent.toString, "pageSize" -> pageSize.toString))
 					given Conversion[search, Future[Schema.GooglePlayDeveloperReportingV1beta1SearchErrorReportsResponse]] = (fun: search) => fun.apply()
 				}
 			}
 			object issues {
-				class search(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1SearchErrorIssuesResponse]) {
+				/** Searches all error issues in which reports have been grouped. */
+				class search(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1SearchErrorIssuesResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
 					/** Optional. Month of year. Must be from 1 to 12, or 0 if specifying a datetime without a month.<br>Format: int32 */
 					def withIntervalEndTimeMonth(intervalEndTimeMonth: Int) = new search(req.addQueryStringParameters("interval.endTime.month" -> intervalEndTimeMonth.toString))
 					/** Optional. Year of date. Must be from 1 to 9999, or 0 if specifying a datetime without a year.<br>Format: int32 */
@@ -154,81 +187,109 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 					def withIntervalStartTimeMonth(intervalStartTimeMonth: Int) = new search(req.addQueryStringParameters("interval.startTime.month" -> intervalStartTimeMonth.toString))
 					/** Optional. Hours of day in 24 hour format. Should be from 0 to 23, defaults to 0 (midnight). An API may choose to allow the value "24:00:00" for scenarios like business closing time.<br>Format: int32 */
 					def withIntervalEndTimeHours(intervalEndTimeHours: Int) = new search(req.addQueryStringParameters("interval.endTime.hours" -> intervalEndTimeHours.toString))
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1SearchErrorIssuesResponse])
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1SearchErrorIssuesResponse])
 				}
 				object search {
-					def apply(appsId :PlayApi, parent: String, pageSize: Int, intervalEndTimeUtcOffset: String, pageToken: String, intervalStartTimeUtcOffset: String, filter: String, orderBy: String, intervalStartTimeTimeZoneId: String, intervalEndTimeTimeZoneId: String)(using auth: AuthToken, ec: ExecutionContext): search = new search(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/errorIssues:search").addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "interval.endTime.utcOffset" -> intervalEndTimeUtcOffset.toString, "pageToken" -> pageToken.toString, "interval.startTime.utcOffset" -> intervalStartTimeUtcOffset.toString, "filter" -> filter.toString, "orderBy" -> orderBy.toString, "interval.startTime.timeZone.id" -> intervalStartTimeTimeZoneId.toString, "interval.endTime.timeZone.id" -> intervalEndTimeTimeZoneId.toString))
+					def apply(appsId :PlayApi, parent: String, pageSize: Int, intervalEndTimeUtcOffset: String, pageToken: String, intervalStartTimeUtcOffset: String, filter: String, orderBy: String, intervalStartTimeTimeZoneId: String, intervalEndTimeTimeZoneId: String)(using signer: RequestSigner, ec: ExecutionContext): search = new search(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/errorIssues:search").addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "interval.endTime.utcOffset" -> intervalEndTimeUtcOffset.toString, "pageToken" -> pageToken.toString, "interval.startTime.utcOffset" -> intervalStartTimeUtcOffset.toString, "filter" -> filter.toString, "orderBy" -> orderBy.toString, "interval.startTime.timeZone.id" -> intervalStartTimeTimeZoneId.toString, "interval.endTime.timeZone.id" -> intervalEndTimeTimeZoneId.toString))
 					given Conversion[search, Future[Schema.GooglePlayDeveloperReportingV1beta1SearchErrorIssuesResponse]] = (fun: search) => fun.apply()
 				}
 			}
 		}
 		object excessivewakeuprate {
-			class query(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGooglePlayDeveloperReportingV1beta1QueryExcessiveWakeupRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QueryExcessiveWakeupRateMetricSetRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QueryExcessiveWakeupRateMetricSetResponse])
+			/** Queries the metrics in the metric set. */
+			class query(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def withGooglePlayDeveloperReportingV1beta1QueryExcessiveWakeupRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QueryExcessiveWakeupRateMetricSetRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QueryExcessiveWakeupRateMetricSetResponse])
 			}
 			object query {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/excessiveWakeupRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/excessiveWakeupRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
 			}
-			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1ExcessiveWakeupRateMetricSet]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1ExcessiveWakeupRateMetricSet])
+			/** Describes the properties of the metric set. */
+			class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1ExcessiveWakeupRateMetricSet]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1ExcessiveWakeupRateMetricSet])
 			}
 			object get {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/excessiveWakeupRateMetricSet").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/excessiveWakeupRateMetricSet").addQueryStringParameters("name" -> name.toString))
 				given Conversion[get, Future[Schema.GooglePlayDeveloperReportingV1beta1ExcessiveWakeupRateMetricSet]] = (fun: get) => fun.apply()
 			}
 		}
 		object slowrenderingrate {
-			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1SlowRenderingRateMetricSet]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1SlowRenderingRateMetricSet])
+			/** Describes the properties of the metric set. */
+			class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1SlowRenderingRateMetricSet]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1SlowRenderingRateMetricSet])
 			}
 			object get {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/slowRenderingRateMetricSet").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/slowRenderingRateMetricSet").addQueryStringParameters("name" -> name.toString))
 				given Conversion[get, Future[Schema.GooglePlayDeveloperReportingV1beta1SlowRenderingRateMetricSet]] = (fun: get) => fun.apply()
 			}
-			class query(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGooglePlayDeveloperReportingV1beta1QuerySlowRenderingRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QuerySlowRenderingRateMetricSetRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QuerySlowRenderingRateMetricSetResponse])
+			/** Queries the metrics in the metric set. */
+			class query(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def withGooglePlayDeveloperReportingV1beta1QuerySlowRenderingRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QuerySlowRenderingRateMetricSetRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QuerySlowRenderingRateMetricSetResponse])
 			}
 			object query {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/slowRenderingRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/slowRenderingRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
 			}
 		}
 		object crashrate {
-			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1CrashRateMetricSet]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1CrashRateMetricSet])
+			/** Describes the properties of the metric set. */
+			class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1CrashRateMetricSet]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1CrashRateMetricSet])
 			}
 			object get {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/crashRateMetricSet").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/crashRateMetricSet").addQueryStringParameters("name" -> name.toString))
 				given Conversion[get, Future[Schema.GooglePlayDeveloperReportingV1beta1CrashRateMetricSet]] = (fun: get) => fun.apply()
 			}
-			class query(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGooglePlayDeveloperReportingV1beta1QueryCrashRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QueryCrashRateMetricSetRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QueryCrashRateMetricSetResponse])
+			/** Queries the metrics in the metric set. */
+			class query(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def withGooglePlayDeveloperReportingV1beta1QueryCrashRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QueryCrashRateMetricSetRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QueryCrashRateMetricSetResponse])
 			}
 			object query {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/crashRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/crashRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
 			}
 		}
 		object slowstartrate {
-			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1SlowStartRateMetricSet]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1SlowStartRateMetricSet])
+			/** Describes the properties of the metric set. */
+			class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1SlowStartRateMetricSet]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1SlowStartRateMetricSet])
 			}
 			object get {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/slowStartRateMetricSet").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/slowStartRateMetricSet").addQueryStringParameters("name" -> name.toString))
 				given Conversion[get, Future[Schema.GooglePlayDeveloperReportingV1beta1SlowStartRateMetricSet]] = (fun: get) => fun.apply()
 			}
-			class query(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGooglePlayDeveloperReportingV1beta1QuerySlowStartRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QuerySlowStartRateMetricSetRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QuerySlowStartRateMetricSetResponse])
+			/** Queries the metrics in the metric set. */
+			class query(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+				val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+				/** Perform the request */
+				def withGooglePlayDeveloperReportingV1beta1QuerySlowStartRateMetricSetRequest(body: Schema.GooglePlayDeveloperReportingV1beta1QuerySlowStartRateMetricSetRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1QuerySlowStartRateMetricSetResponse])
 			}
 			object query {
-				def apply(appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/slowStartRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
+				def apply(appsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/slowStartRateMetricSet:query").addQueryStringParameters("name" -> name.toString))
 			}
 		}
 	}
 	object anomalies {
-		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1ListAnomaliesResponse]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1ListAnomaliesResponse])
+		/** Lists anomalies in any of the datasets. */
+		class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GooglePlayDeveloperReportingV1beta1ListAnomaliesResponse]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/playdeveloperreporting""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GooglePlayDeveloperReportingV1beta1ListAnomaliesResponse])
 		}
 		object list {
-			def apply(appsId :PlayApi, parent: String, filter: String, pageToken: String, pageSize: Int)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/anomalies").addQueryStringParameters("parent" -> parent.toString, "filter" -> filter.toString, "pageToken" -> pageToken.toString, "pageSize" -> pageSize.toString))
+			def apply(appsId :PlayApi, parent: String, filter: String, pageToken: String, pageSize: Int)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1beta1/apps/${appsId}/anomalies").addQueryStringParameters("parent" -> parent.toString, "filter" -> filter.toString, "pageToken" -> pageToken.toString, "pageSize" -> pageSize.toString))
 			given Conversion[list, Future[Schema.GooglePlayDeveloperReportingV1beta1ListAnomaliesResponse]] = (fun: list) => fun.apply()
 		}
 	}

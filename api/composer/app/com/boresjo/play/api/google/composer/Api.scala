@@ -2,7 +2,7 @@ package com.boresjo.play.api.google.composer
 
 import play.api.libs.json.*
 import play.api.libs.ws.{WSClient, WSRequest}
-import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+import com.boresjo.play.api.{PlayApi, RequestSigner, JsonEnumFormat}
 
 import javax.inject.*
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,216 +12,304 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	import Formats.given
 	import play.api.libs.ws.writeableOf_JsValue
 
+	val scopes = Seq(
+		"""https://www.googleapis.com/auth/cloud-platform""" /* See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account. */
+	)
+
 	private val BASE_URL = "https://composer.googleapis.com/"
 
 	object projects {
 		object locations {
 			object operations {
-				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListOperationsResponse]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListOperationsResponse])
+				/** Lists operations that match the specified filter in the request. If the server doesn't support this method, it returns `UNIMPLEMENTED`. */
+				class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListOperationsResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListOperationsResponse])
 				}
 				object list {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, name: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/operations").addQueryStringParameters("name" -> name.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, name: String, filter: String, pageSize: Int, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/operations").addQueryStringParameters("name" -> name.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 					given Conversion[list, Future[Schema.ListOperationsResponse]] = (fun: list) => fun.apply()
 				}
-				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Operation]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Operation])
+				/** Gets the latest state of a long-running operation. Clients can use this method to poll the operation result at intervals as recommended by the API service. */
+				class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Operation]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Operation])
 				}
 				object get {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/operations/${operationsId}").addQueryStringParameters("name" -> name.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, operationsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/operations/${operationsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[get, Future[Schema.Operation]] = (fun: get) => fun.apply()
 				}
-				class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-					def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
+				/** Deletes a long-running operation. This method indicates that the client is no longer interested in the operation result. It does not cancel the operation. If the server doesn't support this method, it returns `google.rpc.Code.UNIMPLEMENTED`. */
+				class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 				}
 				object delete {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/operations/${operationsId}").addQueryStringParameters("name" -> name.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, operationsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/operations/${operationsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 				}
 			}
 			object environments {
-				class databaseFailover(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withDatabaseFailoverRequest(body: Schema.DatabaseFailoverRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
+				/** Triggers database failover (only for highly resilient environments). */
+				class databaseFailover(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def withDatabaseFailoverRequest(body: Schema.DatabaseFailoverRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
 				}
 				object databaseFailover {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using auth: AuthToken, ec: ExecutionContext): databaseFailover = new databaseFailover(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:databaseFailover").addQueryStringParameters("environment" -> environment.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using signer: RequestSigner, ec: ExecutionContext): databaseFailover = new databaseFailover(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:databaseFailover").addQueryStringParameters("environment" -> environment.toString))
 				}
-				class pollAirflowCommand(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withPollAirflowCommandRequest(body: Schema.PollAirflowCommandRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.PollAirflowCommandResponse])
+				/** Polls Airflow CLI command execution and fetches logs. */
+				class pollAirflowCommand(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def withPollAirflowCommandRequest(body: Schema.PollAirflowCommandRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.PollAirflowCommandResponse])
 				}
 				object pollAirflowCommand {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using auth: AuthToken, ec: ExecutionContext): pollAirflowCommand = new pollAirflowCommand(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:pollAirflowCommand").addQueryStringParameters("environment" -> environment.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using signer: RequestSigner, ec: ExecutionContext): pollAirflowCommand = new pollAirflowCommand(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:pollAirflowCommand").addQueryStringParameters("environment" -> environment.toString))
 				}
-				class saveSnapshot(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withSaveSnapshotRequest(body: Schema.SaveSnapshotRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
+				/** Creates a snapshots of a Cloud Composer environment. As a result of this operation, snapshot of environment's state is stored in a location specified in the SaveSnapshotRequest. */
+				class saveSnapshot(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def withSaveSnapshotRequest(body: Schema.SaveSnapshotRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
 				}
 				object saveSnapshot {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using auth: AuthToken, ec: ExecutionContext): saveSnapshot = new saveSnapshot(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:saveSnapshot").addQueryStringParameters("environment" -> environment.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using signer: RequestSigner, ec: ExecutionContext): saveSnapshot = new saveSnapshot(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:saveSnapshot").addQueryStringParameters("environment" -> environment.toString))
 				}
-				class checkUpgrade(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withCheckUpgradeRequest(body: Schema.CheckUpgradeRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
+				/** Check if an upgrade operation on the environment will succeed. In case of problems detailed info can be found in the returned Operation. */
+				class checkUpgrade(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def withCheckUpgradeRequest(body: Schema.CheckUpgradeRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
 				}
 				object checkUpgrade {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using auth: AuthToken, ec: ExecutionContext): checkUpgrade = new checkUpgrade(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:checkUpgrade").addQueryStringParameters("environment" -> environment.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using signer: RequestSigner, ec: ExecutionContext): checkUpgrade = new checkUpgrade(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:checkUpgrade").addQueryStringParameters("environment" -> environment.toString))
 				}
-				class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Operation]) {
-					def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Operation])
+				/** Delete an environment. */
+				class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Operation]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_.json.as[Schema.Operation])
 				}
 				object delete {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}").addQueryStringParameters("name" -> name.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[delete, Future[Schema.Operation]] = (fun: delete) => fun.apply()
 				}
-				class fetchDatabaseProperties(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.FetchDatabasePropertiesResponse]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.FetchDatabasePropertiesResponse])
+				/** Fetches database properties. */
+				class fetchDatabaseProperties(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.FetchDatabasePropertiesResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.FetchDatabasePropertiesResponse])
 				}
 				object fetchDatabaseProperties {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using auth: AuthToken, ec: ExecutionContext): fetchDatabaseProperties = new fetchDatabaseProperties(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:fetchDatabaseProperties").addQueryStringParameters("environment" -> environment.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using signer: RequestSigner, ec: ExecutionContext): fetchDatabaseProperties = new fetchDatabaseProperties(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:fetchDatabaseProperties").addQueryStringParameters("environment" -> environment.toString))
 					given Conversion[fetchDatabaseProperties, Future[Schema.FetchDatabasePropertiesResponse]] = (fun: fetchDatabaseProperties) => fun.apply()
 				}
-				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Environment]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Environment])
+				/** Get an existing environment. */
+				class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Environment]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Environment])
 				}
 				object get {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}").addQueryStringParameters("name" -> name.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[get, Future[Schema.Environment]] = (fun: get) => fun.apply()
 				}
-				class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withEnvironment(body: Schema.Environment) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Operation])
+				/** Update an environment. */
+				class patch(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def withEnvironment(body: Schema.Environment) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Operation])
 				}
 				object patch {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, name: String, updateMask: String)(using signer: RequestSigner, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 				}
-				class stopAirflowCommand(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withStopAirflowCommandRequest(body: Schema.StopAirflowCommandRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.StopAirflowCommandResponse])
+				/** Stops Airflow CLI command execution. */
+				class stopAirflowCommand(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def withStopAirflowCommandRequest(body: Schema.StopAirflowCommandRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.StopAirflowCommandResponse])
 				}
 				object stopAirflowCommand {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using auth: AuthToken, ec: ExecutionContext): stopAirflowCommand = new stopAirflowCommand(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:stopAirflowCommand").addQueryStringParameters("environment" -> environment.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using signer: RequestSigner, ec: ExecutionContext): stopAirflowCommand = new stopAirflowCommand(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:stopAirflowCommand").addQueryStringParameters("environment" -> environment.toString))
 				}
-				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListEnvironmentsResponse]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListEnvironmentsResponse])
+				/** List environments. */
+				class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListEnvironmentsResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListEnvironmentsResponse])
 				}
 				object list {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments").addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String, pageSize: Int, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments").addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 					given Conversion[list, Future[Schema.ListEnvironmentsResponse]] = (fun: list) => fun.apply()
 				}
-				class loadSnapshot(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withLoadSnapshotRequest(body: Schema.LoadSnapshotRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
+				/** Loads a snapshot of a Cloud Composer environment. As a result of this operation, a snapshot of environment's specified in LoadSnapshotRequest is loaded into the environment. */
+				class loadSnapshot(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def withLoadSnapshotRequest(body: Schema.LoadSnapshotRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
 				}
 				object loadSnapshot {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using auth: AuthToken, ec: ExecutionContext): loadSnapshot = new loadSnapshot(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:loadSnapshot").addQueryStringParameters("environment" -> environment.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using signer: RequestSigner, ec: ExecutionContext): loadSnapshot = new loadSnapshot(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:loadSnapshot").addQueryStringParameters("environment" -> environment.toString))
 				}
-				class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withEnvironment(body: Schema.Environment) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
+				/** Create a new environment. */
+				class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def withEnvironment(body: Schema.Environment) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
 				}
 				object create {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments").addQueryStringParameters("parent" -> parent.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments").addQueryStringParameters("parent" -> parent.toString))
 				}
-				class executeAirflowCommand(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withExecuteAirflowCommandRequest(body: Schema.ExecuteAirflowCommandRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.ExecuteAirflowCommandResponse])
+				/** Executes Airflow CLI command. */
+				class executeAirflowCommand(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def withExecuteAirflowCommandRequest(body: Schema.ExecuteAirflowCommandRequest) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.ExecuteAirflowCommandResponse])
 				}
 				object executeAirflowCommand {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using auth: AuthToken, ec: ExecutionContext): executeAirflowCommand = new executeAirflowCommand(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:executeAirflowCommand").addQueryStringParameters("environment" -> environment.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, environment: String)(using signer: RequestSigner, ec: ExecutionContext): executeAirflowCommand = new executeAirflowCommand(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}:executeAirflowCommand").addQueryStringParameters("environment" -> environment.toString))
 				}
 				object workloads {
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListWorkloadsResponse]) {
+					/** Lists workloads in a Cloud Composer environment. Workload is a unit that runs a single Composer component. This method is supported for Cloud Composer environments in versions composer-3.&#42;.&#42;-airflow-&#42;.&#42;.&#42; and newer. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListWorkloadsResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
 						/** Optional. The maximum number of environments to return.<br>Format: int32 */
 						def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
 						/** Optional. The next_page_token value returned from a previous List request, if any. */
 						def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
 						/** Optional. The list filter. Currently only supports equality on the type field. The value of a field specified in the filter expression must be one ComposerWorkloadType enum option. It's possible to get multiple types using "OR" operator, e.g.: "type=SCHEDULER OR type=CELERY_WORKER". If not specified, all items are returned. */
 						def withFilter(filter: String) = new list(req.addQueryStringParameters("filter" -> filter.toString))
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListWorkloadsResponse])
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListWorkloadsResponse])
 					}
 					object list {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/workloads").addQueryStringParameters("parent" -> parent.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/workloads").addQueryStringParameters("parent" -> parent.toString))
 						given Conversion[list, Future[Schema.ListWorkloadsResponse]] = (fun: list) => fun.apply()
 					}
 				}
 				object userWorkloadsSecrets {
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withUserWorkloadsSecret(body: Schema.UserWorkloadsSecret) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.UserWorkloadsSecret])
+					/** Creates a user workloads Secret. This method is supported for Cloud Composer environments in versions composer-3.&#42;.&#42;-airflow-&#42;.&#42;.&#42; and newer. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+						/** Perform the request */
+						def withUserWorkloadsSecret(body: Schema.UserWorkloadsSecret) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.UserWorkloadsSecret])
 					}
 					object create {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsSecrets").addQueryStringParameters("parent" -> parent.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsSecrets").addQueryStringParameters("parent" -> parent.toString))
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
+					/** Deletes a user workloads Secret. This method is supported for Cloud Composer environments in versions composer-3.&#42;.&#42;-airflow-&#42;.&#42;.&#42; and newer. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 					}
 					object delete {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsSecretsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsSecrets/${userWorkloadsSecretsId}").addQueryStringParameters("name" -> name.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsSecretsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsSecrets/${userWorkloadsSecretsId}").addQueryStringParameters("name" -> name.toString))
 						given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 					}
-					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.UserWorkloadsSecret]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.UserWorkloadsSecret])
+					/** Gets an existing user workloads Secret. Values of the "data" field in the response are cleared. This method is supported for Cloud Composer environments in versions composer-3.&#42;.&#42;-airflow-&#42;.&#42;.&#42; and newer. */
+					class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.UserWorkloadsSecret]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.UserWorkloadsSecret])
 					}
 					object get {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsSecretsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsSecrets/${userWorkloadsSecretsId}").addQueryStringParameters("name" -> name.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsSecretsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsSecrets/${userWorkloadsSecretsId}").addQueryStringParameters("name" -> name.toString))
 						given Conversion[get, Future[Schema.UserWorkloadsSecret]] = (fun: get) => fun.apply()
 					}
-					class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withUserWorkloadsSecret(body: Schema.UserWorkloadsSecret) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.UserWorkloadsSecret])
+					/** Updates a user workloads Secret. This method is supported for Cloud Composer environments in versions composer-3.&#42;.&#42;-airflow-&#42;.&#42;.&#42; and newer. */
+					class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+						/** Perform the request */
+						def withUserWorkloadsSecret(body: Schema.UserWorkloadsSecret) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.UserWorkloadsSecret])
 					}
 					object update {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsSecretsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsSecrets/${userWorkloadsSecretsId}").addQueryStringParameters("name" -> name.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsSecretsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsSecrets/${userWorkloadsSecretsId}").addQueryStringParameters("name" -> name.toString))
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListUserWorkloadsSecretsResponse]) {
+					/** Lists user workloads Secrets. This method is supported for Cloud Composer environments in versions composer-3.&#42;.&#42;-airflow-&#42;.&#42;.&#42; and newer. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListUserWorkloadsSecretsResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
 						/** Optional. The maximum number of Secrets to return.<br>Format: int32 */
 						def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
 						/** Optional. The next_page_token value returned from a previous List request, if any. */
 						def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListUserWorkloadsSecretsResponse])
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListUserWorkloadsSecretsResponse])
 					}
 					object list {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsSecrets").addQueryStringParameters("parent" -> parent.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsSecrets").addQueryStringParameters("parent" -> parent.toString))
 						given Conversion[list, Future[Schema.ListUserWorkloadsSecretsResponse]] = (fun: list) => fun.apply()
 					}
 				}
 				object userWorkloadsConfigMaps {
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withUserWorkloadsConfigMap(body: Schema.UserWorkloadsConfigMap) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.UserWorkloadsConfigMap])
+					/** Creates a user workloads ConfigMap. This method is supported for Cloud Composer environments in versions composer-3.&#42;.&#42;-airflow-&#42;.&#42;.&#42; and newer. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+						/** Perform the request */
+						def withUserWorkloadsConfigMap(body: Schema.UserWorkloadsConfigMap) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.UserWorkloadsConfigMap])
 					}
 					object create {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsConfigMaps").addQueryStringParameters("parent" -> parent.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsConfigMaps").addQueryStringParameters("parent" -> parent.toString))
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
+					/** Deletes a user workloads ConfigMap. This method is supported for Cloud Composer environments in versions composer-3.&#42;.&#42;-airflow-&#42;.&#42;.&#42; and newer. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 					}
 					object delete {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsConfigMapsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsConfigMaps/${userWorkloadsConfigMapsId}").addQueryStringParameters("name" -> name.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsConfigMapsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsConfigMaps/${userWorkloadsConfigMapsId}").addQueryStringParameters("name" -> name.toString))
 						given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 					}
-					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.UserWorkloadsConfigMap]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.UserWorkloadsConfigMap])
+					/** Gets an existing user workloads ConfigMap. This method is supported for Cloud Composer environments in versions composer-3.&#42;.&#42;-airflow-&#42;.&#42;.&#42; and newer. */
+					class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.UserWorkloadsConfigMap]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.UserWorkloadsConfigMap])
 					}
 					object get {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsConfigMapsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsConfigMaps/${userWorkloadsConfigMapsId}").addQueryStringParameters("name" -> name.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsConfigMapsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsConfigMaps/${userWorkloadsConfigMapsId}").addQueryStringParameters("name" -> name.toString))
 						given Conversion[get, Future[Schema.UserWorkloadsConfigMap]] = (fun: get) => fun.apply()
 					}
-					class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withUserWorkloadsConfigMap(body: Schema.UserWorkloadsConfigMap) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.UserWorkloadsConfigMap])
+					/** Updates a user workloads ConfigMap. This method is supported for Cloud Composer environments in versions composer-3.&#42;.&#42;-airflow-&#42;.&#42;.&#42; and newer. */
+					class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+						/** Perform the request */
+						def withUserWorkloadsConfigMap(body: Schema.UserWorkloadsConfigMap) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.UserWorkloadsConfigMap])
 					}
 					object update {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsConfigMapsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsConfigMaps/${userWorkloadsConfigMapsId}").addQueryStringParameters("name" -> name.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, userWorkloadsConfigMapsId :PlayApi, name: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsConfigMaps/${userWorkloadsConfigMapsId}").addQueryStringParameters("name" -> name.toString))
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListUserWorkloadsConfigMapsResponse]) {
+					/** Lists user workloads ConfigMaps. This method is supported for Cloud Composer environments in versions composer-3.&#42;.&#42;-airflow-&#42;.&#42;.&#42; and newer. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListUserWorkloadsConfigMapsResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
 						/** Optional. The maximum number of ConfigMaps to return.<br>Format: int32 */
 						def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
 						/** Optional. The next_page_token value returned from a previous List request, if any. */
 						def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListUserWorkloadsConfigMapsResponse])
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListUserWorkloadsConfigMapsResponse])
 					}
 					object list {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsConfigMaps").addQueryStringParameters("parent" -> parent.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, environmentsId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/environments/${environmentsId}/userWorkloadsConfigMaps").addQueryStringParameters("parent" -> parent.toString))
 						given Conversion[list, Future[Schema.ListUserWorkloadsConfigMapsResponse]] = (fun: list) => fun.apply()
 					}
 				}
 			}
 			object imageVersions {
-				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListImageVersionsResponse]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListImageVersionsResponse])
+				/** List ImageVersions for provided location. */
+				class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListImageVersionsResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/cloud-platform""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListImageVersionsResponse])
 				}
 				object list {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String, pageSize: Int, pageToken: String, includePastReleases: Boolean)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/imageVersions").addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "includePastReleases" -> includePastReleases.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String, pageSize: Int, pageToken: String, includePastReleases: Boolean)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/imageVersions").addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "includePastReleases" -> includePastReleases.toString))
 					given Conversion[list, Future[Schema.ListImageVersionsResponse]] = (fun: list) => fun.apply()
 				}
 			}

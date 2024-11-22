@@ -2,7 +2,7 @@ package com.boresjo.play.api.google.tagmanager
 
 import play.api.libs.json.*
 import play.api.libs.ws.{WSClient, WSRequest}
-import com.boresjo.play.api.{PlayApi, AuthToken, JsonEnumFormat}
+import com.boresjo.play.api.{PlayApi, RequestSigner, JsonEnumFormat}
 
 import javax.inject.*
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,734 +12,1056 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	import Formats.given
 	import play.api.libs.ws.writeableOf_JsValue
 
+	val scopes = Seq(
+		"""https://www.googleapis.com/auth/tagmanager.delete.containers""" /* Delete your Google Tag Manager containers */,
+		"""https://www.googleapis.com/auth/tagmanager.edit.containers""" /* Manage your Google Tag Manager container and its subcomponents, excluding versioning and publishing */,
+		"""https://www.googleapis.com/auth/tagmanager.edit.containerversions""" /* Manage your Google Tag Manager container versions */,
+		"""https://www.googleapis.com/auth/tagmanager.manage.accounts""" /* View and manage your Google Tag Manager accounts */,
+		"""https://www.googleapis.com/auth/tagmanager.manage.users""" /* Manage user permissions of your Google Tag Manager account and container */,
+		"""https://www.googleapis.com/auth/tagmanager.publish""" /* Publish your Google Tag Manager container versions */,
+		"""https://www.googleapis.com/auth/tagmanager.readonly""" /* View your Google Tag Manager container and its subcomponents */
+	)
+
 	private val BASE_URL = "https://tagmanager.googleapis.com/"
 
 	object accounts {
-		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Account]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Account])
+		/** Gets a GTM Account. */
+		class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Account]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.manage.accounts""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Account])
 		}
 		object get {
-			def apply(accountsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}").addQueryStringParameters("path" -> path.toString))
+			def apply(accountsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}").addQueryStringParameters("path" -> path.toString))
 			given Conversion[get, Future[Schema.Account]] = (fun: get) => fun.apply()
 		}
-		class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withAccount(body: Schema.Account) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Account])
+		/** Updates a GTM Account. */
+		class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+			val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.manage.accounts""")
+			/** Perform the request */
+			def withAccount(body: Schema.Account) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Account])
 		}
 		object update {
-			def apply(accountsId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+			def apply(accountsId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 		}
-		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListAccountsResponse]) {
-			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListAccountsResponse])
+		/** Lists all GTM Accounts that a user has access to. */
+		class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListAccountsResponse]) {
+			val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.manage.accounts""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+			/** Perform the request */
+			def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListAccountsResponse])
 		}
 		object list {
-			def apply(includeGoogleTags: Boolean, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts").addQueryStringParameters("includeGoogleTags" -> includeGoogleTags.toString, "pageToken" -> pageToken.toString))
+			def apply(includeGoogleTags: Boolean, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts").addQueryStringParameters("includeGoogleTags" -> includeGoogleTags.toString, "pageToken" -> pageToken.toString))
 			given Conversion[list, Future[Schema.ListAccountsResponse]] = (fun: list) => fun.apply()
 		}
 		object user_permissions {
-			class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withUserPermission(body: Schema.UserPermission) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.UserPermission])
+			/** Creates a user's Account & Container access. */
+			class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.manage.users""")
+				/** Perform the request */
+				def withUserPermission(body: Schema.UserPermission) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.UserPermission])
 			}
 			object create {
-				def apply(accountsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/user_permissions").addQueryStringParameters("parent" -> parent.toString))
+				def apply(accountsId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/user_permissions").addQueryStringParameters("parent" -> parent.toString))
 			}
-			class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-				def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+			/** Removes a user from the account, revoking access to it and all of its containers. */
+			class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.manage.users""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 			}
 			object delete {
-				def apply(accountsId :PlayApi, user_permissionsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/user_permissions/${user_permissionsId}").addQueryStringParameters("path" -> path.toString))
+				def apply(accountsId :PlayApi, user_permissionsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/user_permissions/${user_permissionsId}").addQueryStringParameters("path" -> path.toString))
 				given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 			}
-			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.UserPermission]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.UserPermission])
+			/** Gets a user's Account & Container access. */
+			class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.UserPermission]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.manage.users""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.UserPermission])
 			}
 			object get {
-				def apply(accountsId :PlayApi, user_permissionsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/user_permissions/${user_permissionsId}").addQueryStringParameters("path" -> path.toString))
+				def apply(accountsId :PlayApi, user_permissionsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/user_permissions/${user_permissionsId}").addQueryStringParameters("path" -> path.toString))
 				given Conversion[get, Future[Schema.UserPermission]] = (fun: get) => fun.apply()
 			}
-			class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withUserPermission(body: Schema.UserPermission) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.UserPermission])
+			/** Updates a user's Account & Container access. */
+			class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.manage.users""")
+				/** Perform the request */
+				def withUserPermission(body: Schema.UserPermission) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.UserPermission])
 			}
 			object update {
-				def apply(accountsId :PlayApi, user_permissionsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/user_permissions/${user_permissionsId}").addQueryStringParameters("path" -> path.toString))
+				def apply(accountsId :PlayApi, user_permissionsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/user_permissions/${user_permissionsId}").addQueryStringParameters("path" -> path.toString))
 			}
-			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListUserPermissionsResponse]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListUserPermissionsResponse])
+			/** List all users that have access to the account along with Account and Container user access granted to each of them. */
+			class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListUserPermissionsResponse]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.manage.users""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListUserPermissionsResponse])
 			}
 			object list {
-				def apply(accountsId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/user_permissions").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+				def apply(accountsId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/user_permissions").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 				given Conversion[list, Future[Schema.ListUserPermissionsResponse]] = (fun: list) => fun.apply()
 			}
 		}
 		object containers {
-			class snippet(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GetContainerSnippetResponse]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GetContainerSnippetResponse])
+			/** Gets the tagging snippet for a Container. */
+			class snippet(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GetContainerSnippetResponse]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GetContainerSnippetResponse])
 			}
 			object snippet {
-				def apply(accountsId :PlayApi, containersId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): snippet = new snippet(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}:snippet").addQueryStringParameters("path" -> path.toString))
+				def apply(accountsId :PlayApi, containersId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): snippet = new snippet(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}:snippet").addQueryStringParameters("path" -> path.toString))
 				given Conversion[snippet, Future[Schema.GetContainerSnippetResponse]] = (fun: snippet) => fun.apply()
 			}
-			class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withContainer(body: Schema.Container) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Container])
+			/** Creates a Container. */
+			class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+				/** Perform the request */
+				def withContainer(body: Schema.Container) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Container])
 			}
 			object create {
-				def apply(accountsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers").addQueryStringParameters("parent" -> parent.toString))
+				def apply(accountsId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers").addQueryStringParameters("parent" -> parent.toString))
 			}
-			class move_tag_id(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Container]) {
-				def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.Container])
+			/** Move Tag ID out of a Container. */
+			class move_tag_id(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Container]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.Container])
 			}
 			object move_tag_id {
-				def apply(accountsId :PlayApi, containersId :PlayApi, path: String, tagId: String, tagName: String, copyUsers: Boolean, copySettings: Boolean, allowUserPermissionFeatureUpdate: Boolean, copyTermsOfService: Boolean)(using auth: AuthToken, ec: ExecutionContext): move_tag_id = new move_tag_id(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}:move_tag_id").addQueryStringParameters("path" -> path.toString, "tagId" -> tagId.toString, "tagName" -> tagName.toString, "copyUsers" -> copyUsers.toString, "copySettings" -> copySettings.toString, "allowUserPermissionFeatureUpdate" -> allowUserPermissionFeatureUpdate.toString, "copyTermsOfService" -> copyTermsOfService.toString))
+				def apply(accountsId :PlayApi, containersId :PlayApi, path: String, tagId: String, tagName: String, copyUsers: Boolean, copySettings: Boolean, allowUserPermissionFeatureUpdate: Boolean, copyTermsOfService: Boolean)(using signer: RequestSigner, ec: ExecutionContext): move_tag_id = new move_tag_id(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}:move_tag_id").addQueryStringParameters("path" -> path.toString, "tagId" -> tagId.toString, "tagName" -> tagName.toString, "copyUsers" -> copyUsers.toString, "copySettings" -> copySettings.toString, "allowUserPermissionFeatureUpdate" -> allowUserPermissionFeatureUpdate.toString, "copyTermsOfService" -> copyTermsOfService.toString))
 				given Conversion[move_tag_id, Future[Schema.Container]] = (fun: move_tag_id) => fun.apply()
 			}
-			class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-				def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+			/** Deletes a Container. */
+			class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.delete.containers""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 			}
 			object delete {
-				def apply(accountsId :PlayApi, containersId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}").addQueryStringParameters("path" -> path.toString))
+				def apply(accountsId :PlayApi, containersId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}").addQueryStringParameters("path" -> path.toString))
 				given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 			}
-			class combine(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Container]) {
-				def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.Container])
+			/** Combines Containers. */
+			class combine(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Container]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.Container])
 			}
 			object combine {
-				def apply(accountsId :PlayApi, containersId :PlayApi, path: String, containerId: String, allowUserPermissionFeatureUpdate: Boolean, settingSource: String)(using auth: AuthToken, ec: ExecutionContext): combine = new combine(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}:combine").addQueryStringParameters("path" -> path.toString, "containerId" -> containerId.toString, "allowUserPermissionFeatureUpdate" -> allowUserPermissionFeatureUpdate.toString, "settingSource" -> settingSource.toString))
+				def apply(accountsId :PlayApi, containersId :PlayApi, path: String, containerId: String, allowUserPermissionFeatureUpdate: Boolean, settingSource: String)(using signer: RequestSigner, ec: ExecutionContext): combine = new combine(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}:combine").addQueryStringParameters("path" -> path.toString, "containerId" -> containerId.toString, "allowUserPermissionFeatureUpdate" -> allowUserPermissionFeatureUpdate.toString, "settingSource" -> settingSource.toString))
 				given Conversion[combine, Future[Schema.Container]] = (fun: combine) => fun.apply()
 			}
-			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Container]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Container])
+			/** Gets a Container. */
+			class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Container]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Container])
 			}
 			object get {
-				def apply(accountsId :PlayApi, containersId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}").addQueryStringParameters("path" -> path.toString))
+				def apply(accountsId :PlayApi, containersId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}").addQueryStringParameters("path" -> path.toString))
 				given Conversion[get, Future[Schema.Container]] = (fun: get) => fun.apply()
 			}
-			class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withContainer(body: Schema.Container) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Container])
+			/** Updates a Container. */
+			class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+				/** Perform the request */
+				def withContainer(body: Schema.Container) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Container])
 			}
 			object update {
-				def apply(accountsId :PlayApi, containersId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+				def apply(accountsId :PlayApi, containersId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 			}
-			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListContainersResponse]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListContainersResponse])
+			/** Lists all Containers that belongs to a GTM Account. */
+			class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListContainersResponse]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListContainersResponse])
 			}
 			object list {
-				def apply(accountsId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+				def apply(accountsId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 				given Conversion[list, Future[Schema.ListContainersResponse]] = (fun: list) => fun.apply()
 			}
-			class lookup(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Container]) {
-				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Container])
+			/** Looks up a Container by destination ID or tag ID. */
+			class lookup(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Container]) {
+				val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+				/** Perform the request */
+				def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Container])
 			}
 			object lookup {
-				def apply(destinationId: String, tagId: String)(using auth: AuthToken, ec: ExecutionContext): lookup = new lookup(ws.url(BASE_URL + s"tagmanager/v2/accounts/containers:lookup").addQueryStringParameters("destinationId" -> destinationId.toString, "tagId" -> tagId.toString))
+				def apply(destinationId: String, tagId: String)(using signer: RequestSigner, ec: ExecutionContext): lookup = new lookup(ws.url(BASE_URL + s"tagmanager/v2/accounts/containers:lookup").addQueryStringParameters("destinationId" -> destinationId.toString, "tagId" -> tagId.toString))
 				given Conversion[lookup, Future[Schema.Container]] = (fun: lookup) => fun.apply()
 			}
 			object environments {
-				class reauthorize(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withEnvironment(body: Schema.Environment) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Environment])
+				/** Re-generates the authorization code for a GTM Environment. */
+				class reauthorize(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.publish""")
+					/** Perform the request */
+					def withEnvironment(body: Schema.Environment) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Environment])
 				}
 				object reauthorize {
-					def apply(accountsId :PlayApi, containersId :PlayApi, environmentsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): reauthorize = new reauthorize(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments/${environmentsId}:reauthorize").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, environmentsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): reauthorize = new reauthorize(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments/${environmentsId}:reauthorize").addQueryStringParameters("path" -> path.toString))
 				}
-				class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withEnvironment(body: Schema.Environment) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Environment])
+				/** Creates a GTM Environment. */
+				class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+					/** Perform the request */
+					def withEnvironment(body: Schema.Environment) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Environment])
 				}
 				object create {
-					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments").addQueryStringParameters("parent" -> parent.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments").addQueryStringParameters("parent" -> parent.toString))
 				}
-				class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-					def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+				/** Deletes a GTM Environment. */
+				class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 				}
 				object delete {
-					def apply(accountsId :PlayApi, containersId :PlayApi, environmentsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments/${environmentsId}").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, environmentsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments/${environmentsId}").addQueryStringParameters("path" -> path.toString))
 					given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 				}
-				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Environment]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Environment])
+				/** Gets a GTM Environment. */
+				class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Environment]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Environment])
 				}
 				object get {
-					def apply(accountsId :PlayApi, containersId :PlayApi, environmentsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments/${environmentsId}").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, environmentsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments/${environmentsId}").addQueryStringParameters("path" -> path.toString))
 					given Conversion[get, Future[Schema.Environment]] = (fun: get) => fun.apply()
 				}
-				class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withEnvironment(body: Schema.Environment) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Environment])
+				/** Updates a GTM Environment. */
+				class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+					/** Perform the request */
+					def withEnvironment(body: Schema.Environment) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Environment])
 				}
 				object update {
-					def apply(accountsId :PlayApi, containersId :PlayApi, environmentsId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments/${environmentsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, environmentsId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments/${environmentsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 				}
-				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListEnvironmentsResponse]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListEnvironmentsResponse])
+				/** Lists all GTM Environments of a GTM Container. */
+				class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListEnvironmentsResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListEnvironmentsResponse])
 				}
 				object list {
-					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/environments").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 					given Conversion[list, Future[Schema.ListEnvironmentsResponse]] = (fun: list) => fun.apply()
 				}
 			}
 			object versions {
-				class set_latest(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ContainerVersion]) {
-					def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.ContainerVersion])
+				/** Sets the latest version used for synchronization of workspaces when detecting conflicts and errors. */
+				class set_latest(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ContainerVersion]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.ContainerVersion])
 				}
 				object set_latest {
-					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): set_latest = new set_latest(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}:set_latest").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): set_latest = new set_latest(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}:set_latest").addQueryStringParameters("path" -> path.toString))
 					given Conversion[set_latest, Future[Schema.ContainerVersion]] = (fun: set_latest) => fun.apply()
 				}
-				class undelete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ContainerVersion]) {
-					def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.ContainerVersion])
+				/** Undeletes a Container Version. */
+				class undelete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ContainerVersion]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containerversions""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.ContainerVersion])
 				}
 				object undelete {
-					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): undelete = new undelete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}:undelete").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): undelete = new undelete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}:undelete").addQueryStringParameters("path" -> path.toString))
 					given Conversion[undelete, Future[Schema.ContainerVersion]] = (fun: undelete) => fun.apply()
 				}
-				class publish(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.PublishContainerVersionResponse]) {
-					def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.PublishContainerVersionResponse])
+				/** Publishes a Container Version. */
+				class publish(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.PublishContainerVersionResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.publish""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.PublishContainerVersionResponse])
 				}
 				object publish {
-					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): publish = new publish(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}:publish").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): publish = new publish(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}:publish").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 					given Conversion[publish, Future[Schema.PublishContainerVersionResponse]] = (fun: publish) => fun.apply()
 				}
-				class live(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ContainerVersion]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ContainerVersion])
+				/** Gets the live (i.e. published) container version */
+				class live(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ContainerVersion]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ContainerVersion])
 				}
 				object live {
-					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): live = new live(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions:live").addQueryStringParameters("parent" -> parent.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): live = new live(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions:live").addQueryStringParameters("parent" -> parent.toString))
 					given Conversion[live, Future[Schema.ContainerVersion]] = (fun: live) => fun.apply()
 				}
-				class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-					def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+				/** Deletes a Container Version. */
+				class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containerversions""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 				}
 				object delete {
-					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}").addQueryStringParameters("path" -> path.toString))
 					given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 				}
-				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ContainerVersion]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ContainerVersion])
+				/** Gets a Container Version. */
+				class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ContainerVersion]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.edit.containerversions""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ContainerVersion])
 				}
 				object get {
-					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String, containerVersionId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}").addQueryStringParameters("path" -> path.toString, "containerVersionId" -> containerVersionId.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String, containerVersionId: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}").addQueryStringParameters("path" -> path.toString, "containerVersionId" -> containerVersionId.toString))
 					given Conversion[get, Future[Schema.ContainerVersion]] = (fun: get) => fun.apply()
 				}
-				class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withContainerVersion(body: Schema.ContainerVersion) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.ContainerVersion])
+				/** Updates a Container Version. */
+				class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containerversions""")
+					/** Perform the request */
+					def withContainerVersion(body: Schema.ContainerVersion) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.ContainerVersion])
 				}
 				object update {
-					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, versionsId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/versions/${versionsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 				}
 			}
 			object version_headers {
-				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListContainerVersionsResponse]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListContainerVersionsResponse])
+				/** Lists all Container Versions of a GTM Container. */
+				class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListContainerVersionsResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.edit.containerversions""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListContainerVersionsResponse])
 				}
 				object list {
-					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String, includeDeleted: Boolean, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/version_headers").addQueryStringParameters("parent" -> parent.toString, "includeDeleted" -> includeDeleted.toString, "pageToken" -> pageToken.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String, includeDeleted: Boolean, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/version_headers").addQueryStringParameters("parent" -> parent.toString, "includeDeleted" -> includeDeleted.toString, "pageToken" -> pageToken.toString))
 					given Conversion[list, Future[Schema.ListContainerVersionsResponse]] = (fun: list) => fun.apply()
 				}
-				class latest(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ContainerVersionHeader]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ContainerVersionHeader])
+				/** Gets the latest container version header */
+				class latest(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ContainerVersionHeader]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ContainerVersionHeader])
 				}
 				object latest {
-					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): latest = new latest(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/version_headers:latest").addQueryStringParameters("parent" -> parent.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): latest = new latest(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/version_headers:latest").addQueryStringParameters("parent" -> parent.toString))
 					given Conversion[latest, Future[Schema.ContainerVersionHeader]] = (fun: latest) => fun.apply()
 				}
 			}
 			object destinations {
-				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Destination]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Destination])
+				/** Gets a Destination. */
+				class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Destination]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Destination])
 				}
 				object get {
-					def apply(accountsId :PlayApi, containersId :PlayApi, destinationsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/destinations/${destinationsId}").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, destinationsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/destinations/${destinationsId}").addQueryStringParameters("path" -> path.toString))
 					given Conversion[get, Future[Schema.Destination]] = (fun: get) => fun.apply()
 				}
-				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListDestinationsResponse]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListDestinationsResponse])
+				/** Lists all Destinations linked to a GTM Container. */
+				class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListDestinationsResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListDestinationsResponse])
 				}
 				object list {
-					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/destinations").addQueryStringParameters("parent" -> parent.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/destinations").addQueryStringParameters("parent" -> parent.toString))
 					given Conversion[list, Future[Schema.ListDestinationsResponse]] = (fun: list) => fun.apply()
 				}
-				class link(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Destination]) {
-					def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.Destination])
+				/** Adds a Destination to this Container and removes it from the Container to which it is currently linked. */
+				class link(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Destination]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.Destination])
 				}
 				object link {
-					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String, destinationId: String, allowUserPermissionFeatureUpdate: Boolean)(using auth: AuthToken, ec: ExecutionContext): link = new link(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/destinations:link").addQueryStringParameters("parent" -> parent.toString, "destinationId" -> destinationId.toString, "allowUserPermissionFeatureUpdate" -> allowUserPermissionFeatureUpdate.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String, destinationId: String, allowUserPermissionFeatureUpdate: Boolean)(using signer: RequestSigner, ec: ExecutionContext): link = new link(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/destinations:link").addQueryStringParameters("parent" -> parent.toString, "destinationId" -> destinationId.toString, "allowUserPermissionFeatureUpdate" -> allowUserPermissionFeatureUpdate.toString))
 					given Conversion[link, Future[Schema.Destination]] = (fun: link) => fun.apply()
 				}
 			}
 			object workspaces {
-				class quick_preview(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.QuickPreviewResponse]) {
-					def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.QuickPreviewResponse])
+				/** Quick previews a workspace by creating a fake container version from all entities in the provided workspace. */
+				class quick_preview(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.QuickPreviewResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containerversions""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.QuickPreviewResponse])
 				}
 				object quick_preview {
-					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): quick_preview = new quick_preview(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}:quick_preview").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): quick_preview = new quick_preview(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}:quick_preview").addQueryStringParameters("path" -> path.toString))
 					given Conversion[quick_preview, Future[Schema.QuickPreviewResponse]] = (fun: quick_preview) => fun.apply()
 				}
-				class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-					def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+				/** Deletes a Workspace. */
+				class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.delete.containers""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 				}
 				object delete {
-					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}").addQueryStringParameters("path" -> path.toString))
 					given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 				}
-				class sync(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.SyncWorkspaceResponse]) {
-					def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.SyncWorkspaceResponse])
+				/** Syncs a workspace to the latest container version by updating all unmodified workspace entities and displaying conflicts for modified entities. */
+				class sync(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.SyncWorkspaceResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.SyncWorkspaceResponse])
 				}
 				object sync {
-					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): sync = new sync(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}:sync").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): sync = new sync(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}:sync").addQueryStringParameters("path" -> path.toString))
 					given Conversion[sync, Future[Schema.SyncWorkspaceResponse]] = (fun: sync) => fun.apply()
 				}
-				class create_version(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withCreateContainerVersionRequestVersionOptions(body: Schema.CreateContainerVersionRequestVersionOptions) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.CreateContainerVersionResponse])
+				/** Creates a Container Version from the entities present in the workspace, deletes the workspace, and sets the base container version to the newly created version. */
+				class create_version(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containerversions""")
+					/** Perform the request */
+					def withCreateContainerVersionRequestVersionOptions(body: Schema.CreateContainerVersionRequestVersionOptions) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.CreateContainerVersionResponse])
 				}
 				object create_version {
-					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): create_version = new create_version(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}:create_version").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): create_version = new create_version(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}:create_version").addQueryStringParameters("path" -> path.toString))
 				}
-				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Workspace]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Workspace])
+				/** Gets a Workspace. */
+				class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Workspace]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Workspace])
 				}
 				object get {
-					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}").addQueryStringParameters("path" -> path.toString))
 					given Conversion[get, Future[Schema.Workspace]] = (fun: get) => fun.apply()
 				}
-				class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withWorkspace(body: Schema.Workspace) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Workspace])
+				/** Updates a Workspace. */
+				class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+					/** Perform the request */
+					def withWorkspace(body: Schema.Workspace) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Workspace])
 				}
 				object update {
-					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 				}
-				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListWorkspacesResponse]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListWorkspacesResponse])
+				/** Lists all Workspaces that belong to a GTM Container. */
+				class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListWorkspacesResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListWorkspacesResponse])
 				}
 				object list {
-					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 					given Conversion[list, Future[Schema.ListWorkspacesResponse]] = (fun: list) => fun.apply()
 				}
-				class resolve_conflict(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withEntity(body: Schema.Entity) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_ => ())
+				/** Resolves a merge conflict for a workspace entity by updating it to the resolved entity passed in the request. */
+				class resolve_conflict(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+					/** Perform the request */
+					def withEntity(body: Schema.Entity) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_ => ())
 				}
 				object resolve_conflict {
-					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): resolve_conflict = new resolve_conflict(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}:resolve_conflict").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): resolve_conflict = new resolve_conflict(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}:resolve_conflict").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 				}
-				class getStatus(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GetWorkspaceStatusResponse]) {
-					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GetWorkspaceStatusResponse])
+				/** Finds conflicting and modified entities in the workspace. */
+				class getStatus(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GetWorkspaceStatusResponse]) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+					/** Perform the request */
+					def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GetWorkspaceStatusResponse])
 				}
 				object getStatus {
-					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): getStatus = new getStatus(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/status").addQueryStringParameters("path" -> path.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): getStatus = new getStatus(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/status").addQueryStringParameters("path" -> path.toString))
 					given Conversion[getStatus, Future[Schema.GetWorkspaceStatusResponse]] = (fun: getStatus) => fun.apply()
 				}
-				class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withWorkspace(body: Schema.Workspace) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Workspace])
+				/** Creates a Workspace. */
+				class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+					val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+					/** Perform the request */
+					def withWorkspace(body: Schema.Workspace) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Workspace])
 				}
 				object create {
-					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces").addQueryStringParameters("parent" -> parent.toString))
+					def apply(accountsId :PlayApi, containersId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces").addQueryStringParameters("parent" -> parent.toString))
 				}
 				object gtag_config {
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withGtagConfig(body: Schema.GtagConfig) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GtagConfig])
+					/** Creates a Google tag config. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withGtagConfig(body: Schema.GtagConfig) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GtagConfig])
 					}
 					object create {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/gtag_config").addQueryStringParameters("parent" -> parent.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/gtag_config").addQueryStringParameters("parent" -> parent.toString))
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+					/** Deletes a Google tag config. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 					}
 					object delete {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, gtag_configId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/gtag_config/${gtag_configId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, gtag_configId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/gtag_config/${gtag_configId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 					}
-					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GtagConfig]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GtagConfig])
+					/** Gets a Google tag config. */
+					class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.GtagConfig]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.GtagConfig])
 					}
 					object get {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, gtag_configId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/gtag_config/${gtag_configId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, gtag_configId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/gtag_config/${gtag_configId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[get, Future[Schema.GtagConfig]] = (fun: get) => fun.apply()
 					}
-					class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withGtagConfig(body: Schema.GtagConfig) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.GtagConfig])
+					/** Updates a Google tag config. */
+					class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withGtagConfig(body: Schema.GtagConfig) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.GtagConfig])
 					}
 					object update {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, gtag_configId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/gtag_config/${gtag_configId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, gtag_configId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/gtag_config/${gtag_configId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListGtagConfigResponse]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListGtagConfigResponse])
+					/** Lists all Google tag configs in a Container. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListGtagConfigResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListGtagConfigResponse])
 					}
 					object list {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/gtag_config").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/gtag_config").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 						given Conversion[list, Future[Schema.ListGtagConfigResponse]] = (fun: list) => fun.apply()
 					}
 				}
 				object variables {
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withVariable(body: Schema.Variable) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Variable])
+					/** Creates a GTM Variable. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withVariable(body: Schema.Variable) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Variable])
 					}
 					object create {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables").addQueryStringParameters("parent" -> parent.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables").addQueryStringParameters("parent" -> parent.toString))
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+					/** Deletes a GTM Variable. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 					}
 					object delete {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, variablesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables/${variablesId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, variablesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables/${variablesId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 					}
-					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Variable]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Variable])
+					/** Gets a GTM Variable. */
+					class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Variable]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Variable])
 					}
 					object get {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, variablesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables/${variablesId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, variablesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables/${variablesId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[get, Future[Schema.Variable]] = (fun: get) => fun.apply()
 					}
-					class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withVariable(body: Schema.Variable) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Variable])
+					/** Updates a GTM Variable. */
+					class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withVariable(body: Schema.Variable) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Variable])
 					}
 					object update {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, variablesId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables/${variablesId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, variablesId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables/${variablesId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 					}
-					class revert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.RevertVariableResponse]) {
-						def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.RevertVariableResponse])
+					/** Reverts changes to a GTM Variable in a GTM Workspace. */
+					class revert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.RevertVariableResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.RevertVariableResponse])
 					}
 					object revert {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, variablesId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables/${variablesId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, variablesId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables/${variablesId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 						given Conversion[revert, Future[Schema.RevertVariableResponse]] = (fun: revert) => fun.apply()
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListVariablesResponse]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListVariablesResponse])
+					/** Lists all GTM Variables of a Container. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListVariablesResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListVariablesResponse])
 					}
 					object list {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/variables").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 						given Conversion[list, Future[Schema.ListVariablesResponse]] = (fun: list) => fun.apply()
 					}
 				}
 				object transformations {
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withTransformation(body: Schema.Transformation) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Transformation])
+					/** Creates a GTM Transformation. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withTransformation(body: Schema.Transformation) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Transformation])
 					}
 					object create {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations").addQueryStringParameters("parent" -> parent.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations").addQueryStringParameters("parent" -> parent.toString))
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+					/** Deletes a GTM Transformation. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 					}
 					object delete {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, transformationsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations/${transformationsId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, transformationsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations/${transformationsId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 					}
-					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Transformation]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Transformation])
+					/** Gets a GTM Transformation. */
+					class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Transformation]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Transformation])
 					}
 					object get {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, transformationsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations/${transformationsId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, transformationsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations/${transformationsId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[get, Future[Schema.Transformation]] = (fun: get) => fun.apply()
 					}
-					class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withTransformation(body: Schema.Transformation) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Transformation])
+					/** Updates a GTM Transformation. */
+					class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withTransformation(body: Schema.Transformation) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Transformation])
 					}
 					object update {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, transformationsId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations/${transformationsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, transformationsId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations/${transformationsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 					}
-					class revert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.RevertTransformationResponse]) {
-						def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.RevertTransformationResponse])
+					/** Reverts changes to a GTM Transformation in a GTM Workspace. */
+					class revert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.RevertTransformationResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.RevertTransformationResponse])
 					}
 					object revert {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, transformationsId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations/${transformationsId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, transformationsId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations/${transformationsId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 						given Conversion[revert, Future[Schema.RevertTransformationResponse]] = (fun: revert) => fun.apply()
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListTransformationsResponse]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListTransformationsResponse])
+					/** Lists all GTM Transformations of a GTM container workspace. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListTransformationsResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListTransformationsResponse])
 					}
 					object list {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/transformations").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 						given Conversion[list, Future[Schema.ListTransformationsResponse]] = (fun: list) => fun.apply()
 					}
 				}
 				object zones {
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withZone(body: Schema.Zone) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Zone])
+					/** Creates a GTM Zone. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withZone(body: Schema.Zone) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Zone])
 					}
 					object create {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones").addQueryStringParameters("parent" -> parent.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones").addQueryStringParameters("parent" -> parent.toString))
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+					/** Deletes a GTM Zone. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 					}
 					object delete {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, zonesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones/${zonesId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, zonesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones/${zonesId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 					}
-					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Zone]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Zone])
+					/** Gets a GTM Zone. */
+					class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Zone]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Zone])
 					}
 					object get {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, zonesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones/${zonesId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, zonesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones/${zonesId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[get, Future[Schema.Zone]] = (fun: get) => fun.apply()
 					}
-					class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withZone(body: Schema.Zone) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Zone])
+					/** Updates a GTM Zone. */
+					class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withZone(body: Schema.Zone) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Zone])
 					}
 					object update {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, zonesId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones/${zonesId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, zonesId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones/${zonesId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 					}
-					class revert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.RevertZoneResponse]) {
-						def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.RevertZoneResponse])
+					/** Reverts changes to a GTM Zone in a GTM Workspace. */
+					class revert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.RevertZoneResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.RevertZoneResponse])
 					}
 					object revert {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, zonesId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones/${zonesId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, zonesId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones/${zonesId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 						given Conversion[revert, Future[Schema.RevertZoneResponse]] = (fun: revert) => fun.apply()
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListZonesResponse]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListZonesResponse])
+					/** Lists all GTM Zones of a GTM container workspace. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListZonesResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListZonesResponse])
 					}
 					object list {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/zones").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 						given Conversion[list, Future[Schema.ListZonesResponse]] = (fun: list) => fun.apply()
 					}
 				}
 				object clients {
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withClient(body: Schema.Client) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Client])
+					/** Creates a GTM Client. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withClient(body: Schema.Client) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Client])
 					}
 					object create {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients").addQueryStringParameters("parent" -> parent.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients").addQueryStringParameters("parent" -> parent.toString))
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+					/** Deletes a GTM Client. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 					}
 					object delete {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, clientsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients/${clientsId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, clientsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients/${clientsId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 					}
-					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Client]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Client])
+					/** Gets a GTM Client. */
+					class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Client]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Client])
 					}
 					object get {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, clientsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients/${clientsId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, clientsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients/${clientsId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[get, Future[Schema.Client]] = (fun: get) => fun.apply()
 					}
-					class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withClient(body: Schema.Client) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Client])
+					/** Updates a GTM Client. */
+					class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withClient(body: Schema.Client) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Client])
 					}
 					object update {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, clientsId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients/${clientsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, clientsId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients/${clientsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 					}
-					class revert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.RevertClientResponse]) {
-						def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.RevertClientResponse])
+					/** Reverts changes to a GTM Client in a GTM Workspace. */
+					class revert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.RevertClientResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.RevertClientResponse])
 					}
 					object revert {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, clientsId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients/${clientsId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, clientsId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients/${clientsId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 						given Conversion[revert, Future[Schema.RevertClientResponse]] = (fun: revert) => fun.apply()
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListClientsResponse]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListClientsResponse])
+					/** Lists all GTM Clients of a GTM container workspace. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListClientsResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListClientsResponse])
 					}
 					object list {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/clients").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 						given Conversion[list, Future[Schema.ListClientsResponse]] = (fun: list) => fun.apply()
 					}
 				}
 				object tags {
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withTag(body: Schema.Tag) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Tag])
+					/** Creates a GTM Tag. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withTag(body: Schema.Tag) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Tag])
 					}
 					object create {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags").addQueryStringParameters("parent" -> parent.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags").addQueryStringParameters("parent" -> parent.toString))
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+					/** Deletes a GTM Tag. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 					}
 					object delete {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, tagsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags/${tagsId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, tagsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags/${tagsId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 					}
-					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Tag]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Tag])
+					/** Gets a GTM Tag. */
+					class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Tag]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Tag])
 					}
 					object get {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, tagsId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags/${tagsId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, tagsId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags/${tagsId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[get, Future[Schema.Tag]] = (fun: get) => fun.apply()
 					}
-					class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withTag(body: Schema.Tag) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Tag])
+					/** Updates a GTM Tag. */
+					class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withTag(body: Schema.Tag) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Tag])
 					}
 					object update {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, tagsId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags/${tagsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, tagsId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags/${tagsId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 					}
-					class revert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.RevertTagResponse]) {
-						def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.RevertTagResponse])
+					/** Reverts changes to a GTM Tag in a GTM Workspace. */
+					class revert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.RevertTagResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.RevertTagResponse])
 					}
 					object revert {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, tagsId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags/${tagsId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, tagsId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags/${tagsId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 						given Conversion[revert, Future[Schema.RevertTagResponse]] = (fun: revert) => fun.apply()
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListTagsResponse]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListTagsResponse])
+					/** Lists all GTM Tags of a Container. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListTagsResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListTagsResponse])
 					}
 					object list {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/tags").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 						given Conversion[list, Future[Schema.ListTagsResponse]] = (fun: list) => fun.apply()
 					}
 				}
 				object triggers {
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withTrigger(body: Schema.Trigger) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Trigger])
+					/** Creates a GTM Trigger. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withTrigger(body: Schema.Trigger) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Trigger])
 					}
 					object create {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers").addQueryStringParameters("parent" -> parent.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers").addQueryStringParameters("parent" -> parent.toString))
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+					/** Deletes a GTM Trigger. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 					}
 					object delete {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, triggersId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers/${triggersId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, triggersId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers/${triggersId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 					}
-					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Trigger]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Trigger])
+					/** Gets a GTM Trigger. */
+					class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Trigger]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Trigger])
 					}
 					object get {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, triggersId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers/${triggersId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, triggersId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers/${triggersId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[get, Future[Schema.Trigger]] = (fun: get) => fun.apply()
 					}
-					class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withTrigger(body: Schema.Trigger) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Trigger])
+					/** Updates a GTM Trigger. */
+					class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withTrigger(body: Schema.Trigger) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Trigger])
 					}
 					object update {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, triggersId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers/${triggersId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, triggersId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers/${triggersId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 					}
-					class revert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.RevertTriggerResponse]) {
-						def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.RevertTriggerResponse])
+					/** Reverts changes to a GTM Trigger in a GTM Workspace. */
+					class revert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.RevertTriggerResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.RevertTriggerResponse])
 					}
 					object revert {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, triggersId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers/${triggersId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, triggersId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers/${triggersId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 						given Conversion[revert, Future[Schema.RevertTriggerResponse]] = (fun: revert) => fun.apply()
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListTriggersResponse]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListTriggersResponse])
+					/** Lists all GTM Triggers of a Container. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListTriggersResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListTriggersResponse])
 					}
 					object list {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/triggers").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 						given Conversion[list, Future[Schema.ListTriggersResponse]] = (fun: list) => fun.apply()
 					}
 				}
 				object built_in_variables {
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.CreateBuiltInVariableResponse]) {
-						def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.CreateBuiltInVariableResponse])
+					/** Creates one or more GTM Built-In Variables. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.CreateBuiltInVariableResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.CreateBuiltInVariableResponse])
 					}
 					object create {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, `type`: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/built_in_variables").addQueryStringParameters("parent" -> parent.toString, "type" -> `type`.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, `type`: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/built_in_variables").addQueryStringParameters("parent" -> parent.toString, "type" -> `type`.toString))
 						given Conversion[create, Future[Schema.CreateBuiltInVariableResponse]] = (fun: create) => fun.apply()
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+					/** Deletes one or more GTM Built-In Variables. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 					}
 					object delete {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String, `type`: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/built_in_variables").addQueryStringParameters("path" -> path.toString, "type" -> `type`.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String, `type`: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/built_in_variables").addQueryStringParameters("path" -> path.toString, "type" -> `type`.toString))
 						given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListEnabledBuiltInVariablesResponse]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListEnabledBuiltInVariablesResponse])
+					/** Lists all the enabled Built-In Variables of a GTM Container. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListEnabledBuiltInVariablesResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListEnabledBuiltInVariablesResponse])
 					}
 					object list {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/built_in_variables").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/built_in_variables").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 						given Conversion[list, Future[Schema.ListEnabledBuiltInVariablesResponse]] = (fun: list) => fun.apply()
 					}
-					class revert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.RevertBuiltInVariableResponse]) {
-						def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.RevertBuiltInVariableResponse])
+					/** Reverts changes to a GTM Built-In Variables in a GTM Workspace. */
+					class revert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.RevertBuiltInVariableResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.RevertBuiltInVariableResponse])
 					}
 					object revert {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String, `type`: String)(using auth: AuthToken, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/built_in_variables:revert").addQueryStringParameters("path" -> path.toString, "type" -> `type`.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, path: String, `type`: String)(using signer: RequestSigner, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/built_in_variables:revert").addQueryStringParameters("path" -> path.toString, "type" -> `type`.toString))
 						given Conversion[revert, Future[Schema.RevertBuiltInVariableResponse]] = (fun: revert) => fun.apply()
 					}
 				}
 				object templates {
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withCustomTemplate(body: Schema.CustomTemplate) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.CustomTemplate])
+					/** Creates a GTM Custom Template. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withCustomTemplate(body: Schema.CustomTemplate) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.CustomTemplate])
 					}
 					object create {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates").addQueryStringParameters("parent" -> parent.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates").addQueryStringParameters("parent" -> parent.toString))
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+					/** Deletes a GTM Template. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 					}
 					object delete {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, templatesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates/${templatesId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, templatesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates/${templatesId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 					}
-					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.CustomTemplate]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.CustomTemplate])
+					/** Gets a GTM Template. */
+					class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.CustomTemplate]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.CustomTemplate])
 					}
 					object get {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, templatesId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates/${templatesId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, templatesId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates/${templatesId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[get, Future[Schema.CustomTemplate]] = (fun: get) => fun.apply()
 					}
-					class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withCustomTemplate(body: Schema.CustomTemplate) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.CustomTemplate])
+					/** Updates a GTM Template. */
+					class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withCustomTemplate(body: Schema.CustomTemplate) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.CustomTemplate])
 					}
 					object update {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, templatesId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates/${templatesId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, templatesId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates/${templatesId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 					}
-					class revert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.RevertTemplateResponse]) {
-						def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.RevertTemplateResponse])
+					/** Reverts changes to a GTM Template in a GTM Workspace. */
+					class revert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.RevertTemplateResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.RevertTemplateResponse])
 					}
 					object revert {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, templatesId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates/${templatesId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, templatesId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates/${templatesId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 						given Conversion[revert, Future[Schema.RevertTemplateResponse]] = (fun: revert) => fun.apply()
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListTemplatesResponse]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListTemplatesResponse])
+					/** Lists all GTM Templates of a GTM container workspace. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListTemplatesResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListTemplatesResponse])
 					}
 					object list {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/templates").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 						given Conversion[list, Future[Schema.ListTemplatesResponse]] = (fun: list) => fun.apply()
 					}
 				}
 				object folders {
-					class move_entities_to_folder(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withFolder(body: Schema.Folder) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_ => ())
+					/** Moves entities to a GTM Folder. If {folder_id} in the request path equals 0, this will instead move entities out of the folder they currently belong to. */
+					class move_entities_to_folder(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withFolder(body: Schema.Folder) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_ => ())
 					}
 					object move_entities_to_folder {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String, tagId: String, variableId: String, triggerId: String)(using auth: AuthToken, ec: ExecutionContext): move_entities_to_folder = new move_entities_to_folder(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}:move_entities_to_folder").addQueryStringParameters("path" -> path.toString, "tagId" -> tagId.toString, "variableId" -> variableId.toString, "triggerId" -> triggerId.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String, tagId: String, variableId: String, triggerId: String)(using signer: RequestSigner, ec: ExecutionContext): move_entities_to_folder = new move_entities_to_folder(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}:move_entities_to_folder").addQueryStringParameters("path" -> path.toString, "tagId" -> tagId.toString, "variableId" -> variableId.toString, "triggerId" -> triggerId.toString))
 					}
-					class entities(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.FolderEntities]) {
-						def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.FolderEntities])
+					/** List all entities in a GTM Folder. */
+					class entities(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.FolderEntities]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.FolderEntities])
 					}
 					object entities {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): entities = new entities(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}:entities").addQueryStringParameters("path" -> path.toString, "pageToken" -> pageToken.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): entities = new entities(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}:entities").addQueryStringParameters("path" -> path.toString, "pageToken" -> pageToken.toString))
 						given Conversion[entities, Future[Schema.FolderEntities]] = (fun: entities) => fun.apply()
 					}
-					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withFolder(body: Schema.Folder) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Folder])
+					/** Creates a GTM Folder. */
+					class create(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withFolder(body: Schema.Folder) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Folder])
 					}
 					object create {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders").addQueryStringParameters("parent" -> parent.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String)(using signer: RequestSigner, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders").addQueryStringParameters("parent" -> parent.toString))
 					}
-					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-						def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
+					/** Deletes a GTM Folder. */
+					class delete(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Unit]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("DELETE")).map(_ => ())
 					}
 					object delete {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 					}
-					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Folder]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Folder])
+					/** Gets a GTM Folder. */
+					class get(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.Folder]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.Folder])
 					}
 					object get {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}").addQueryStringParameters("path" -> path.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String)(using signer: RequestSigner, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}").addQueryStringParameters("path" -> path.toString))
 						given Conversion[get, Future[Schema.Folder]] = (fun: get) => fun.apply()
 					}
-					class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withFolder(body: Schema.Folder) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Folder])
+					/** Updates a GTM Folder. */
+					class update(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def withFolder(body: Schema.Folder) = signer.exec(scopes:_*)(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Folder])
 					}
 					object update {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 					}
-					class revert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.RevertFolderResponse]) {
-						def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.RevertFolderResponse])
+					/** Reverts changes to a GTM Folder in a GTM Workspace. */
+					class revert(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.RevertFolderResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("POST")).map(_.json.as[Schema.RevertFolderResponse])
 					}
 					object revert {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String, fingerprint: String)(using auth: AuthToken, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, foldersId :PlayApi, path: String, fingerprint: String)(using signer: RequestSigner, ec: ExecutionContext): revert = new revert(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders/${foldersId}:revert").addQueryStringParameters("path" -> path.toString, "fingerprint" -> fingerprint.toString))
 						given Conversion[revert, Future[Schema.RevertFolderResponse]] = (fun: revert) => fun.apply()
 					}
-					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListFoldersResponse]) {
-						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListFoldersResponse])
+					/** Lists all GTM Folders of a Container. */
+					class list(private val req: WSRequest)(using signer: RequestSigner, ec: ExecutionContext) extends (() => Future[Schema.ListFoldersResponse]) {
+						val scopes = Seq("""https://www.googleapis.com/auth/tagmanager.edit.containers""", """https://www.googleapis.com/auth/tagmanager.readonly""")
+						/** Perform the request */
+						def apply() = signer.exec(scopes:_*)(req,_.execute("GET")).map(_.json.as[Schema.ListFoldersResponse])
 					}
 					object list {
-						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
+						def apply(accountsId :PlayApi, containersId :PlayApi, workspacesId :PlayApi, parent: String, pageToken: String)(using signer: RequestSigner, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"tagmanager/v2/accounts/${accountsId}/containers/${containersId}/workspaces/${workspacesId}/folders").addQueryStringParameters("parent" -> parent.toString, "pageToken" -> pageToken.toString))
 						given Conversion[list, Future[Schema.ListFoldersResponse]] = (fun: list) => fun.apply()
 					}
 				}
