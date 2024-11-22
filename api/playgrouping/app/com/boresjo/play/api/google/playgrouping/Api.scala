@@ -17,17 +17,17 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	object apps {
 		object tokens {
 			class verify(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withVerifyTokenRequest(body: Schema.VerifyTokenRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.VerifyTokenResponse])
+				def withVerifyTokenRequest(body: Schema.VerifyTokenRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.VerifyTokenResponse])
 			}
 			object verify {
-				def apply(appsId :PlayApi, tokensId :PlayApi, appPackage: String, token: String)(using auth: AuthToken, ec: ExecutionContext): verify = new verify(auth(ws.url(BASE_URL + s"v1alpha1/apps/${appsId}/tokens/${tokensId}:verify")).addQueryStringParameters("appPackage" -> appPackage.toString, "token" -> token.toString))
+				def apply(appsId :PlayApi, tokensId :PlayApi, appPackage: String, token: String)(using auth: AuthToken, ec: ExecutionContext): verify = new verify(ws.url(BASE_URL + s"v1alpha1/apps/${appsId}/tokens/${tokensId}:verify").addQueryStringParameters("appPackage" -> appPackage.toString, "token" -> token.toString))
 			}
 			object tags {
 				class createOrUpdate(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withCreateOrUpdateTagsRequest(body: Schema.CreateOrUpdateTagsRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.CreateOrUpdateTagsResponse])
+					def withCreateOrUpdateTagsRequest(body: Schema.CreateOrUpdateTagsRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.CreateOrUpdateTagsResponse])
 				}
 				object createOrUpdate {
-					def apply(appsId :PlayApi, tokensId :PlayApi, appPackage: String, token: String)(using auth: AuthToken, ec: ExecutionContext): createOrUpdate = new createOrUpdate(auth(ws.url(BASE_URL + s"v1alpha1/apps/${appsId}/tokens/${tokensId}/tags:createOrUpdate")).addQueryStringParameters("appPackage" -> appPackage.toString, "token" -> token.toString))
+					def apply(appsId :PlayApi, tokensId :PlayApi, appPackage: String, token: String)(using auth: AuthToken, ec: ExecutionContext): createOrUpdate = new createOrUpdate(ws.url(BASE_URL + s"v1alpha1/apps/${appsId}/tokens/${tokensId}/tags:createOrUpdate").addQueryStringParameters("appPackage" -> appPackage.toString, "token" -> token.toString))
 				}
 			}
 		}

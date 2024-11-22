@@ -16,18 +16,18 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object reports {
 		class batchGet(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withGetReportsRequest(body: Schema.GetReportsRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GetReportsResponse])
+			def withGetReportsRequest(body: Schema.GetReportsRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GetReportsResponse])
 		}
 		object batchGet {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): batchGet = new batchGet(auth(ws.url(BASE_URL + s"v4/reports:batchGet")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): batchGet = new batchGet(ws.url(BASE_URL + s"v4/reports:batchGet").addQueryStringParameters())
 		}
 	}
 	object userActivity {
 		class search(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withSearchUserActivityRequest(body: Schema.SearchUserActivityRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.SearchUserActivityResponse])
+			def withSearchUserActivityRequest(body: Schema.SearchUserActivityRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.SearchUserActivityResponse])
 		}
 		object search {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): search = new search(auth(ws.url(BASE_URL + s"v4/userActivity:search")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): search = new search(ws.url(BASE_URL + s"v4/userActivity:search").addQueryStringParameters())
 		}
 	}
 }

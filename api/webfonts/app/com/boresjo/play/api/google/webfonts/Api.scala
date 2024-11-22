@@ -16,10 +16,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object webfonts {
 		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.WebfontList]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.WebfontList])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.WebfontList])
 		}
 		object list {
-			def apply(sort: String, capability: String, family: String, subset: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/webfonts")).addQueryStringParameters("sort" -> sort.toString, "capability" -> capability.toString, "family" -> family.toString, "subset" -> subset.toString))
+			def apply(sort: String, capability: String, family: String, subset: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/webfonts").addQueryStringParameters("sort" -> sort.toString, "capability" -> capability.toString, "family" -> family.toString, "subset" -> subset.toString))
 			given Conversion[list, Future[Schema.WebfontList]] = (fun: list) => fun.apply()
 		}
 	}

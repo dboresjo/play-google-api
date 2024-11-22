@@ -16,10 +16,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object v1 {
 		class token(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withGoogleIdentityStsV1ExchangeTokenRequest(body: Schema.GoogleIdentityStsV1ExchangeTokenRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleIdentityStsV1ExchangeTokenResponse])
+			def withGoogleIdentityStsV1ExchangeTokenRequest(body: Schema.GoogleIdentityStsV1ExchangeTokenRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleIdentityStsV1ExchangeTokenResponse])
 		}
 		object token {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): token = new token(auth(ws.url(BASE_URL + s"v1/token")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): token = new token(ws.url(BASE_URL + s"v1/token").addQueryStringParameters())
 		}
 	}
 }

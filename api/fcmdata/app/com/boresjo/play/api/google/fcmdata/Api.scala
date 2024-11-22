@@ -18,10 +18,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 		object androidApps {
 			object deliveryData {
 				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GoogleFirebaseFcmDataV1beta1ListAndroidDeliveryDataResponse]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.GoogleFirebaseFcmDataV1beta1ListAndroidDeliveryDataResponse])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GoogleFirebaseFcmDataV1beta1ListAndroidDeliveryDataResponse])
 				}
 				object list {
-					def apply(projectsId :PlayApi, androidAppsId :PlayApi, pageSize: Int, pageToken: String, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/androidApps/${androidAppsId}/deliveryData")).addQueryStringParameters("pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "parent" -> parent.toString))
+					def apply(projectsId :PlayApi, androidAppsId :PlayApi, pageSize: Int, pageToken: String, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/androidApps/${androidAppsId}/deliveryData").addQueryStringParameters("pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "parent" -> parent.toString))
 					given Conversion[list, Future[Schema.GoogleFirebaseFcmDataV1beta1ListAndroidDeliveryDataResponse]] = (fun: list) => fun.apply()
 				}
 			}

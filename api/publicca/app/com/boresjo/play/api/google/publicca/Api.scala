@@ -18,10 +18,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 		object locations {
 			object externalAccountKeys {
 				class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withExternalAccountKey(body: Schema.ExternalAccountKey) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.ExternalAccountKey])
+					def withExternalAccountKey(body: Schema.ExternalAccountKey) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.ExternalAccountKey])
 				}
 				object create {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/externalAccountKeys")).addQueryStringParameters("parent" -> parent.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/externalAccountKeys").addQueryStringParameters("parent" -> parent.toString))
 				}
 			}
 		}

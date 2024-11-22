@@ -16,10 +16,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object archive {
 		class insert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Groups]) {
-			def apply() = req.execute("POST").map(_.json.as[Schema.Groups])
+			def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.Groups])
 		}
 		object insert {
-			def apply(groupId: String)(using auth: AuthToken, ec: ExecutionContext): insert = new insert(auth(ws.url(BASE_URL + s"groups/v1/groups/${groupId}/archive")).addQueryStringParameters())
+			def apply(groupId: String)(using auth: AuthToken, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"groups/v1/groups/${groupId}/archive").addQueryStringParameters())
 			given Conversion[insert, Future[Schema.Groups]] = (fun: insert) => fun.apply()
 		}
 	}

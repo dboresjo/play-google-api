@@ -16,31 +16,31 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object operations {
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Operation]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.Operation])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Operation])
 		}
 		object get {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, operationsId :PlayApi, operationsId1 :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/operations/${operationsId}/${operationsId1}")).addQueryStringParameters("name" -> name.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, operationsId :PlayApi, operationsId1 :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/operations/${operationsId}/${operationsId1}").addQueryStringParameters("name" -> name.toString))
 			given Conversion[get, Future[Schema.Operation]] = (fun: get) => fun.apply()
 		}
 	}
 	object v1 {
 		class exportAssets(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withExportAssetsRequest(body: Schema.ExportAssetsRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Operation])
+			def withExportAssetsRequest(body: Schema.ExportAssetsRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
 		}
 		object exportAssets {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): exportAssets = new exportAssets(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:exportAssets")).addQueryStringParameters("parent" -> parent.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): exportAssets = new exportAssets(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:exportAssets").addQueryStringParameters("parent" -> parent.toString))
 		}
 		class analyzeIamPolicyLongrunning(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withAnalyzeIamPolicyLongrunningRequest(body: Schema.AnalyzeIamPolicyLongrunningRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Operation])
+			def withAnalyzeIamPolicyLongrunningRequest(body: Schema.AnalyzeIamPolicyLongrunningRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
 		}
 		object analyzeIamPolicyLongrunning {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String)(using auth: AuthToken, ec: ExecutionContext): analyzeIamPolicyLongrunning = new analyzeIamPolicyLongrunning(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeIamPolicyLongrunning")).addQueryStringParameters("scope" -> scope.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String)(using auth: AuthToken, ec: ExecutionContext): analyzeIamPolicyLongrunning = new analyzeIamPolicyLongrunning(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeIamPolicyLongrunning").addQueryStringParameters("scope" -> scope.toString))
 		}
 		class analyzeOrgPolicies(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.AnalyzeOrgPoliciesResponse]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.AnalyzeOrgPoliciesResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.AnalyzeOrgPoliciesResponse])
 		}
 		object analyzeOrgPolicies {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String, constraint: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): analyzeOrgPolicies = new analyzeOrgPolicies(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeOrgPolicies")).addQueryStringParameters("scope" -> scope.toString, "constraint" -> constraint.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String, constraint: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): analyzeOrgPolicies = new analyzeOrgPolicies(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeOrgPolicies").addQueryStringParameters("scope" -> scope.toString, "constraint" -> constraint.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 			given Conversion[analyzeOrgPolicies, Future[Schema.AnalyzeOrgPoliciesResponse]] = (fun: analyzeOrgPolicies) => fun.apply()
 		}
 		class analyzeIamPolicy(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.AnalyzeIamPolicyResponse]) {
@@ -64,30 +64,30 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			def withSavedAnalysisQuery(savedAnalysisQuery: String) = new analyzeIamPolicy(req.addQueryStringParameters("savedAnalysisQuery" -> savedAnalysisQuery.toString))
 			/** Optional. Amount of time executable has to complete. See JSON representation of [Duration](https://developers.google.com/protocol-buffers/docs/proto3#json). If this field is set with a value less than the RPC deadline, and the execution of your query hasn't finished in the specified execution timeout, you will get a response with partial result. Otherwise, your query's execution will continue until the RPC deadline. If it's not finished until then, you will get a DEADLINE_EXCEEDED error. Default is empty.<br>Format: google-duration */
 			def withExecutionTimeout(executionTimeout: String) = new analyzeIamPolicy(req.addQueryStringParameters("executionTimeout" -> executionTimeout.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.AnalyzeIamPolicyResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.AnalyzeIamPolicyResponse])
 		}
 		object analyzeIamPolicy {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String, analysisQueryResourceSelectorFullResourceName: String, analysisQueryIdentitySelectorIdentity: String, analysisQueryConditionContextAccessTime: String)(using auth: AuthToken, ec: ExecutionContext): analyzeIamPolicy = new analyzeIamPolicy(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeIamPolicy")).addQueryStringParameters("scope" -> scope.toString, "analysisQuery.resourceSelector.fullResourceName" -> analysisQueryResourceSelectorFullResourceName.toString, "analysisQuery.identitySelector.identity" -> analysisQueryIdentitySelectorIdentity.toString, "analysisQuery.conditionContext.accessTime" -> analysisQueryConditionContextAccessTime.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String, analysisQueryResourceSelectorFullResourceName: String, analysisQueryIdentitySelectorIdentity: String, analysisQueryConditionContextAccessTime: String)(using auth: AuthToken, ec: ExecutionContext): analyzeIamPolicy = new analyzeIamPolicy(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeIamPolicy").addQueryStringParameters("scope" -> scope.toString, "analysisQuery.resourceSelector.fullResourceName" -> analysisQueryResourceSelectorFullResourceName.toString, "analysisQuery.identitySelector.identity" -> analysisQueryIdentitySelectorIdentity.toString, "analysisQuery.conditionContext.accessTime" -> analysisQueryConditionContextAccessTime.toString))
 			given Conversion[analyzeIamPolicy, Future[Schema.AnalyzeIamPolicyResponse]] = (fun: analyzeIamPolicy) => fun.apply()
 		}
 		class analyzeOrgPolicyGovernedAssets(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.AnalyzeOrgPolicyGovernedAssetsResponse]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.AnalyzeOrgPolicyGovernedAssetsResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.AnalyzeOrgPolicyGovernedAssetsResponse])
 		}
 		object analyzeOrgPolicyGovernedAssets {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String, constraint: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): analyzeOrgPolicyGovernedAssets = new analyzeOrgPolicyGovernedAssets(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeOrgPolicyGovernedAssets")).addQueryStringParameters("scope" -> scope.toString, "constraint" -> constraint.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String, constraint: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): analyzeOrgPolicyGovernedAssets = new analyzeOrgPolicyGovernedAssets(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeOrgPolicyGovernedAssets").addQueryStringParameters("scope" -> scope.toString, "constraint" -> constraint.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 			given Conversion[analyzeOrgPolicyGovernedAssets, Future[Schema.AnalyzeOrgPolicyGovernedAssetsResponse]] = (fun: analyzeOrgPolicyGovernedAssets) => fun.apply()
 		}
 		class queryAssets(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withQueryAssetsRequest(body: Schema.QueryAssetsRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.QueryAssetsResponse])
+			def withQueryAssetsRequest(body: Schema.QueryAssetsRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.QueryAssetsResponse])
 		}
 		object queryAssets {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): queryAssets = new queryAssets(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:queryAssets")).addQueryStringParameters("parent" -> parent.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): queryAssets = new queryAssets(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:queryAssets").addQueryStringParameters("parent" -> parent.toString))
 		}
 		class analyzeOrgPolicyGovernedContainers(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.AnalyzeOrgPolicyGovernedContainersResponse]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.AnalyzeOrgPolicyGovernedContainersResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.AnalyzeOrgPolicyGovernedContainersResponse])
 		}
 		object analyzeOrgPolicyGovernedContainers {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String, constraint: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): analyzeOrgPolicyGovernedContainers = new analyzeOrgPolicyGovernedContainers(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeOrgPolicyGovernedContainers")).addQueryStringParameters("scope" -> scope.toString, "constraint" -> constraint.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String, constraint: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): analyzeOrgPolicyGovernedContainers = new analyzeOrgPolicyGovernedContainers(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeOrgPolicyGovernedContainers").addQueryStringParameters("scope" -> scope.toString, "constraint" -> constraint.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 			given Conversion[analyzeOrgPolicyGovernedContainers, Future[Schema.AnalyzeOrgPolicyGovernedContainersResponse]] = (fun: analyzeOrgPolicyGovernedContainers) => fun.apply()
 		}
 		class searchAllIamPolicies(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.SearchAllIamPoliciesResponse]) {
@@ -101,10 +101,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			def withAssetTypes(assetTypes: String) = new searchAllIamPolicies(req.addQueryStringParameters("assetTypes" -> assetTypes.toString))
 			/** Optional. A comma-separated list of fields specifying the sorting order of the results. The default order is ascending. Add " DESC" after the field name to indicate descending order. Redundant space characters are ignored. Example: "assetType DESC, resource". Only singular primitive fields in the response are sortable: &#42; resource &#42; assetType &#42; project All the other fields such as repeated fields (e.g., `folders`) and non-primitive fields (e.g., `policy`) are not supported. */
 			def withOrderBy(orderBy: String) = new searchAllIamPolicies(req.addQueryStringParameters("orderBy" -> orderBy.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.SearchAllIamPoliciesResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.SearchAllIamPoliciesResponse])
 		}
 		object searchAllIamPolicies {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String)(using auth: AuthToken, ec: ExecutionContext): searchAllIamPolicies = new searchAllIamPolicies(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:searchAllIamPolicies")).addQueryStringParameters("scope" -> scope.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String)(using auth: AuthToken, ec: ExecutionContext): searchAllIamPolicies = new searchAllIamPolicies(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:searchAllIamPolicies").addQueryStringParameters("scope" -> scope.toString))
 			given Conversion[searchAllIamPolicies, Future[Schema.SearchAllIamPoliciesResponse]] = (fun: searchAllIamPolicies) => fun.apply()
 		}
 		class batchGetAssetsHistory(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.BatchGetAssetsHistoryResponse]) {
@@ -112,17 +112,17 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			def withContentType(contentType: String) = new batchGetAssetsHistory(req.addQueryStringParameters("contentType" -> contentType.toString))
 			/** Optional. A list of relationship types to output, for example: `INSTANCE_TO_INSTANCEGROUP`. This field should only be specified if content_type=RELATIONSHIP. &#42; If specified: it outputs specified relationships' history on the [asset_names]. It returns an error if any of the [relationship_types] doesn't belong to the supported relationship types of the [asset_names] or if any of the [asset_names]'s types doesn't belong to the source types of the [relationship_types]. &#42; Otherwise: it outputs the supported relationships' history on the [asset_names] or returns an error if any of the [asset_names]'s types has no relationship support. See [Introduction to Cloud Asset Inventory](https://cloud.google.com/asset-inventory/docs/overview) for all supported asset types and relationship types. */
 			def withRelationshipTypes(relationshipTypes: String) = new batchGetAssetsHistory(req.addQueryStringParameters("relationshipTypes" -> relationshipTypes.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.BatchGetAssetsHistoryResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.BatchGetAssetsHistoryResponse])
 		}
 		object batchGetAssetsHistory {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String, assetNames: String, readTimeWindowStartTime: String, readTimeWindowEndTime: String)(using auth: AuthToken, ec: ExecutionContext): batchGetAssetsHistory = new batchGetAssetsHistory(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:batchGetAssetsHistory")).addQueryStringParameters("parent" -> parent.toString, "assetNames" -> assetNames.toString, "readTimeWindow.startTime" -> readTimeWindowStartTime.toString, "readTimeWindow.endTime" -> readTimeWindowEndTime.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String, assetNames: String, readTimeWindowStartTime: String, readTimeWindowEndTime: String)(using auth: AuthToken, ec: ExecutionContext): batchGetAssetsHistory = new batchGetAssetsHistory(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:batchGetAssetsHistory").addQueryStringParameters("parent" -> parent.toString, "assetNames" -> assetNames.toString, "readTimeWindow.startTime" -> readTimeWindowStartTime.toString, "readTimeWindow.endTime" -> readTimeWindowEndTime.toString))
 			given Conversion[batchGetAssetsHistory, Future[Schema.BatchGetAssetsHistoryResponse]] = (fun: batchGetAssetsHistory) => fun.apply()
 		}
 		class analyzeMove(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.AnalyzeMoveResponse]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.AnalyzeMoveResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.AnalyzeMoveResponse])
 		}
 		object analyzeMove {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, resource: String, destinationParent: String, view: String)(using auth: AuthToken, ec: ExecutionContext): analyzeMove = new analyzeMove(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeMove")).addQueryStringParameters("resource" -> resource.toString, "destinationParent" -> destinationParent.toString, "view" -> view.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, resource: String, destinationParent: String, view: String)(using auth: AuthToken, ec: ExecutionContext): analyzeMove = new analyzeMove(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:analyzeMove").addQueryStringParameters("resource" -> resource.toString, "destinationParent" -> destinationParent.toString, "view" -> view.toString))
 			given Conversion[analyzeMove, Future[Schema.AnalyzeMoveResponse]] = (fun: analyzeMove) => fun.apply()
 		}
 		class searchAllResources(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.SearchAllResourcesResponse]) {
@@ -138,83 +138,83 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			def withOrderBy(orderBy: String) = new searchAllResources(req.addQueryStringParameters("orderBy" -> orderBy.toString))
 			/** Optional. A comma-separated list of fields that you want returned in the results. The following fields are returned by default if not specified: &#42; `name` &#42; `assetType` &#42; `project` &#42; `folders` &#42; `organization` &#42; `displayName` &#42; `description` &#42; `location` &#42; `labels` &#42; `tags` &#42; `effectiveTags` &#42; `networkTags` &#42; `kmsKeys` &#42; `createTime` &#42; `updateTime` &#42; `state` &#42; `additionalAttributes` &#42; `parentFullResourceName` &#42; `parentAssetType` Some fields of large size, such as `versionedResources`, `attachedResources`, `effectiveTags` etc., are not returned by default, but you can specify them in the `read_mask` parameter if you want to include them. If `"&#42;"` is specified, all [available fields](https://cloud.google.com/asset-inventory/docs/reference/rest/v1/TopLevel/searchAllResources#resourcesearchresult) are returned. Examples: `"name,location"`, `"name,versionedResources"`, `"&#42;"`. Any invalid field path will trigger INVALID_ARGUMENT error.<br>Format: google-fieldmask */
 			def withReadMask(readMask: String) = new searchAllResources(req.addQueryStringParameters("readMask" -> readMask.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.SearchAllResourcesResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.SearchAllResourcesResponse])
 		}
 		object searchAllResources {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String)(using auth: AuthToken, ec: ExecutionContext): searchAllResources = new searchAllResources(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:searchAllResources")).addQueryStringParameters("scope" -> scope.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String)(using auth: AuthToken, ec: ExecutionContext): searchAllResources = new searchAllResources(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}:searchAllResources").addQueryStringParameters("scope" -> scope.toString))
 			given Conversion[searchAllResources, Future[Schema.SearchAllResourcesResponse]] = (fun: searchAllResources) => fun.apply()
 		}
 	}
 	object assets {
 		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListAssetsResponse]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.ListAssetsResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListAssetsResponse])
 		}
 		object list {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String, readTime: String, assetTypes: String, contentType: String, pageSize: Int, pageToken: String, relationshipTypes: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/assets")).addQueryStringParameters("parent" -> parent.toString, "readTime" -> readTime.toString, "assetTypes" -> assetTypes.toString, "contentType" -> contentType.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "relationshipTypes" -> relationshipTypes.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String, readTime: String, assetTypes: String, contentType: String, pageSize: Int, pageToken: String, relationshipTypes: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/assets").addQueryStringParameters("parent" -> parent.toString, "readTime" -> readTime.toString, "assetTypes" -> assetTypes.toString, "contentType" -> contentType.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "relationshipTypes" -> relationshipTypes.toString))
 			given Conversion[list, Future[Schema.ListAssetsResponse]] = (fun: list) => fun.apply()
 		}
 	}
 	object feeds {
 		class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withCreateFeedRequest(body: Schema.CreateFeedRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Feed])
+			def withCreateFeedRequest(body: Schema.CreateFeedRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Feed])
 		}
 		object create {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/feeds")).addQueryStringParameters("parent" -> parent.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/feeds").addQueryStringParameters("parent" -> parent.toString))
 		}
 		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-			def apply() = req.execute("DELETE").map(_.json.as[Schema.Empty])
+			def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 		}
 		object delete {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, feedsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/feeds/${feedsId}")).addQueryStringParameters("name" -> name.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, feedsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/feeds/${feedsId}").addQueryStringParameters("name" -> name.toString))
 			given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 		}
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Feed]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.Feed])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Feed])
 		}
 		object get {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, feedsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/feeds/${feedsId}")).addQueryStringParameters("name" -> name.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, feedsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/feeds/${feedsId}").addQueryStringParameters("name" -> name.toString))
 			given Conversion[get, Future[Schema.Feed]] = (fun: get) => fun.apply()
 		}
 		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withUpdateFeedRequest(body: Schema.UpdateFeedRequest) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Feed])
+			def withUpdateFeedRequest(body: Schema.UpdateFeedRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Feed])
 		}
 		object patch {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, feedsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/feeds/${feedsId}")).addQueryStringParameters("name" -> name.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, feedsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/feeds/${feedsId}").addQueryStringParameters("name" -> name.toString))
 		}
 		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListFeedsResponse]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.ListFeedsResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListFeedsResponse])
 		}
 		object list {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/feeds")).addQueryStringParameters("parent" -> parent.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/feeds").addQueryStringParameters("parent" -> parent.toString))
 			given Conversion[list, Future[Schema.ListFeedsResponse]] = (fun: list) => fun.apply()
 		}
 	}
 	object savedQueries {
 		class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withSavedQuery(body: Schema.SavedQuery) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.SavedQuery])
+			def withSavedQuery(body: Schema.SavedQuery) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.SavedQuery])
 		}
 		object create {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String, savedQueryId: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/savedQueries")).addQueryStringParameters("parent" -> parent.toString, "savedQueryId" -> savedQueryId.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String, savedQueryId: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/savedQueries").addQueryStringParameters("parent" -> parent.toString, "savedQueryId" -> savedQueryId.toString))
 		}
 		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-			def apply() = req.execute("DELETE").map(_.json.as[Schema.Empty])
+			def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 		}
 		object delete {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, savedQueriesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/savedQueries/${savedQueriesId}")).addQueryStringParameters("name" -> name.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, savedQueriesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/savedQueries/${savedQueriesId}").addQueryStringParameters("name" -> name.toString))
 			given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 		}
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.SavedQuery]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.SavedQuery])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.SavedQuery])
 		}
 		object get {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, savedQueriesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/savedQueries/${savedQueriesId}")).addQueryStringParameters("name" -> name.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, savedQueriesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/savedQueries/${savedQueriesId}").addQueryStringParameters("name" -> name.toString))
 			given Conversion[get, Future[Schema.SavedQuery]] = (fun: get) => fun.apply()
 		}
 		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withSavedQuery(body: Schema.SavedQuery) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.SavedQuery])
+			def withSavedQuery(body: Schema.SavedQuery) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.SavedQuery])
 		}
 		object patch {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, savedQueriesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/savedQueries/${savedQueriesId}")).addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, savedQueriesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/savedQueries/${savedQueriesId}").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 		}
 		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListSavedQueriesResponse]) {
 			/** Optional. The expression to filter resources. The expression is a list of zero or more restrictions combined via logical operators `AND` and `OR`. When `AND` and `OR` are both used in the expression, parentheses must be appropriately used to group the combinations. The expression may also contain regular expressions. See https://google.aip.dev/160 for more information on the grammar. */
@@ -223,19 +223,19 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
 			/** Optional. A page token, received from a previous `ListSavedQueries` call. Provide this to retrieve the subsequent page. When paginating, all other parameters provided to `ListSavedQueries` must match the call that provided the page token. */
 			def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.ListSavedQueriesResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListSavedQueriesResponse])
 		}
 		object list {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/savedQueries")).addQueryStringParameters("parent" -> parent.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/savedQueries").addQueryStringParameters("parent" -> parent.toString))
 			given Conversion[list, Future[Schema.ListSavedQueriesResponse]] = (fun: list) => fun.apply()
 		}
 	}
 	object effectiveIamPolicies {
 		class batchGet(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.BatchGetEffectiveIamPoliciesResponse]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.BatchGetEffectiveIamPoliciesResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.BatchGetEffectiveIamPoliciesResponse])
 		}
 		object batchGet {
-			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String, names: String)(using auth: AuthToken, ec: ExecutionContext): batchGet = new batchGet(auth(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/effectiveIamPolicies:batchGet")).addQueryStringParameters("scope" -> scope.toString, "names" -> names.toString))
+			def apply(v1Id :PlayApi, v1Id1 :PlayApi, scope: String, names: String)(using auth: AuthToken, ec: ExecutionContext): batchGet = new batchGet(ws.url(BASE_URL + s"v1/${v1Id}/${v1Id1}/effectiveIamPolicies:batchGet").addQueryStringParameters("scope" -> scope.toString, "names" -> names.toString))
 			given Conversion[batchGet, Future[Schema.BatchGetEffectiveIamPoliciesResponse]] = (fun: batchGet) => fun.apply()
 		}
 	}

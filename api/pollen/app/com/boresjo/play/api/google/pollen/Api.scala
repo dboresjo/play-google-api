@@ -24,20 +24,20 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			def withPageSize(pageSize: Int) = new lookup(req.addQueryStringParameters("pageSize" -> pageSize.toString))
 			/** Optional. A page token received from a previous daily call. It is used to retrieve the subsequent page. Note that when providing a value for the page token, all other request parameters provided must match the previous call that provided the page token. */
 			def withPageToken(pageToken: String) = new lookup(req.addQueryStringParameters("pageToken" -> pageToken.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.LookupForecastResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.LookupForecastResponse])
 		}
 		object lookup {
-			def apply(days: Int, locationLatitude: Number, locationLongitude: Number)(using auth: AuthToken, ec: ExecutionContext): lookup = new lookup(auth(ws.url(BASE_URL + s"v1/forecast:lookup")).addQueryStringParameters("days" -> days.toString, "location.latitude" -> locationLatitude.toString, "location.longitude" -> locationLongitude.toString))
+			def apply(days: Int, locationLatitude: Number, locationLongitude: Number)(using auth: AuthToken, ec: ExecutionContext): lookup = new lookup(ws.url(BASE_URL + s"v1/forecast:lookup").addQueryStringParameters("days" -> days.toString, "location.latitude" -> locationLatitude.toString, "location.longitude" -> locationLongitude.toString))
 			given Conversion[lookup, Future[Schema.LookupForecastResponse]] = (fun: lookup) => fun.apply()
 		}
 	}
 	object mapTypes {
 		object heatmapTiles {
 			class lookupHeatmapTile(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.HttpBody]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.HttpBody])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.HttpBody])
 			}
 			object lookupHeatmapTile {
-				def apply(x: Int, zoom: Int, y: Int, mapType: String)(using auth: AuthToken, ec: ExecutionContext): lookupHeatmapTile = new lookupHeatmapTile(auth(ws.url(BASE_URL + s"v1/mapTypes/${mapType}/heatmapTiles/${zoom}/${x}/${y}")).addQueryStringParameters())
+				def apply(x: Int, zoom: Int, y: Int, mapType: String)(using auth: AuthToken, ec: ExecutionContext): lookupHeatmapTile = new lookupHeatmapTile(ws.url(BASE_URL + s"v1/mapTypes/${mapType}/heatmapTiles/${zoom}/${x}/${y}").addQueryStringParameters())
 				given Conversion[lookupHeatmapTile, Future[Schema.HttpBody]] = (fun: lookupHeatmapTile) => fun.apply()
 			}
 		}

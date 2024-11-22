@@ -16,10 +16,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object activity {
 		class query(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withQueryDriveActivityRequest(body: Schema.QueryDriveActivityRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.QueryDriveActivityResponse])
+			def withQueryDriveActivityRequest(body: Schema.QueryDriveActivityRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.QueryDriveActivityResponse])
 		}
 		object query {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): query = new query(auth(ws.url(BASE_URL + s"v2/activity:query")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"v2/activity:query").addQueryStringParameters())
 		}
 	}
 }

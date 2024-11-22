@@ -16,23 +16,23 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object groups {
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Groups]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.Groups])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Groups])
 		}
 		object get {
-			def apply(groupUniqueId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"${groupUniqueId}")).addQueryStringParameters())
+			def apply(groupUniqueId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"${groupUniqueId}").addQueryStringParameters())
 			given Conversion[get, Future[Schema.Groups]] = (fun: get) => fun.apply()
 		}
 		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withGroups(body: Schema.Groups) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Groups])
+			def withGroups(body: Schema.Groups) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Groups])
 		}
 		object patch {
-			def apply(groupUniqueId: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"${groupUniqueId}")).addQueryStringParameters())
+			def apply(groupUniqueId: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"${groupUniqueId}").addQueryStringParameters())
 		}
 		class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withGroups(body: Schema.Groups) = req.withBody(Json.toJson(body)).execute("PUT").map(_.json.as[Schema.Groups])
+			def withGroups(body: Schema.Groups) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Groups])
 		}
 		object update {
-			def apply(groupUniqueId: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(auth(ws.url(BASE_URL + s"${groupUniqueId}")).addQueryStringParameters())
+			def apply(groupUniqueId: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"${groupUniqueId}").addQueryStringParameters())
 		}
 	}
 }

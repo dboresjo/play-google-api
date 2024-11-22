@@ -16,57 +16,57 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object media {
 		class download(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Media]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.Media])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Media])
 		}
 		object download {
-			def apply(mediaId :PlayApi, resourceName: String)(using auth: AuthToken, ec: ExecutionContext): download = new download(auth(ws.url(BASE_URL + s"v1/media/${mediaId}")).addQueryStringParameters("resourceName" -> resourceName.toString))
+			def apply(mediaId :PlayApi, resourceName: String)(using auth: AuthToken, ec: ExecutionContext): download = new download(ws.url(BASE_URL + s"v1/media/${mediaId}").addQueryStringParameters("resourceName" -> resourceName.toString))
 			given Conversion[download, Future[Schema.Media]] = (fun: download) => fun.apply()
 		}
 		class upload(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withUploadAttachmentRequest(body: Schema.UploadAttachmentRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.UploadAttachmentResponse])
+			def withUploadAttachmentRequest(body: Schema.UploadAttachmentRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.UploadAttachmentResponse])
 		}
 		object upload {
-			def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): upload = new upload(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/attachments:upload")).addQueryStringParameters("parent" -> parent.toString))
+			def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): upload = new upload(ws.url(BASE_URL + s"v1/spaces/${spacesId}/attachments:upload").addQueryStringParameters("parent" -> parent.toString))
 		}
 	}
 	object spaces {
 		class completeImport(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withCompleteImportSpaceRequest(body: Schema.CompleteImportSpaceRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.CompleteImportSpaceResponse])
+			def withCompleteImportSpaceRequest(body: Schema.CompleteImportSpaceRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.CompleteImportSpaceResponse])
 		}
 		object completeImport {
-			def apply(spacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): completeImport = new completeImport(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}:completeImport")).addQueryStringParameters("name" -> name.toString))
+			def apply(spacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): completeImport = new completeImport(ws.url(BASE_URL + s"v1/spaces/${spacesId}:completeImport").addQueryStringParameters("name" -> name.toString))
 		}
 		class findDirectMessage(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Space]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.Space])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Space])
 		}
 		object findDirectMessage {
-			def apply(name: String)(using auth: AuthToken, ec: ExecutionContext): findDirectMessage = new findDirectMessage(auth(ws.url(BASE_URL + s"v1/spaces:findDirectMessage")).addQueryStringParameters("name" -> name.toString))
+			def apply(name: String)(using auth: AuthToken, ec: ExecutionContext): findDirectMessage = new findDirectMessage(ws.url(BASE_URL + s"v1/spaces:findDirectMessage").addQueryStringParameters("name" -> name.toString))
 			given Conversion[findDirectMessage, Future[Schema.Space]] = (fun: findDirectMessage) => fun.apply()
 		}
 		class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 			/** Optional. A unique identifier for this request. A random UUID is recommended. Specifying an existing request ID returns the space created with that ID instead of creating a new space. Specifying an existing request ID from the same Chat app with a different authenticated user returns an error. */
 			def withRequestId(requestId: String) = new create(req.addQueryStringParameters("requestId" -> requestId.toString))
-			def withSpace(body: Schema.Space) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Space])
+			def withSpace(body: Schema.Space) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Space])
 		}
 		object create {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/spaces")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/spaces").addQueryStringParameters())
 		}
 		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
 			/** Optional. When `true`, the method runs using the user's Google Workspace administrator privileges. The calling user must be a Google Workspace administrator with the [manage chat and spaces conversations privilege](https://support.google.com/a/answer/13369245). Requires the `chat.admin.delete` [OAuth 2.0 scope](https://developers.google.com/workspace/chat/authenticate-authorize#chat-api-scopes). */
 			def withUseAdminAccess(useAdminAccess: Boolean) = new delete(req.addQueryStringParameters("useAdminAccess" -> useAdminAccess.toString))
-			def apply() = req.execute("DELETE").map(_.json.as[Schema.Empty])
+			def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 		}
 		object delete {
-			def apply(spacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}")).addQueryStringParameters("name" -> name.toString))
+			def apply(spacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/spaces/${spacesId}").addQueryStringParameters("name" -> name.toString))
 			given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 		}
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Space]) {
 			/** Optional. When `true`, the method runs using the user's Google Workspace administrator privileges. The calling user must be a Google Workspace administrator with the [manage chat and spaces conversations privilege](https://support.google.com/a/answer/13369245). Requires the `chat.admin.spaces` or `chat.admin.spaces.readonly` [OAuth 2.0 scopes](https://developers.google.com/workspace/chat/authenticate-authorize#chat-api-scopes). */
 			def withUseAdminAccess(useAdminAccess: Boolean) = new get(req.addQueryStringParameters("useAdminAccess" -> useAdminAccess.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.Space])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Space])
 		}
 		object get {
-			def apply(spacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}")).addQueryStringParameters("name" -> name.toString))
+			def apply(spacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/spaces/${spacesId}").addQueryStringParameters("name" -> name.toString))
 			given Conversion[get, Future[Schema.Space]] = (fun: get) => fun.apply()
 		}
 		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
@@ -74,16 +74,16 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			def withUpdateMask(updateMask: String) = new patch(req.addQueryStringParameters("updateMask" -> updateMask.toString))
 			/** Optional. When `true`, the method runs using the user's Google Workspace administrator privileges. The calling user must be a Google Workspace administrator with the [manage chat and spaces conversations privilege](https://support.google.com/a/answer/13369245). Requires the `chat.admin.spaces` [OAuth 2.0 scope](https://developers.google.com/workspace/chat/authenticate-authorize#chat-api-scopes). Some `FieldMask` values are not supported using admin access. For details, see the description of `update_mask`. */
 			def withUseAdminAccess(useAdminAccess: Boolean) = new patch(req.addQueryStringParameters("useAdminAccess" -> useAdminAccess.toString))
-			def withSpace(body: Schema.Space) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Space])
+			def withSpace(body: Schema.Space) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Space])
 		}
 		object patch {
-			def apply(spacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}")).addQueryStringParameters("name" -> name.toString))
+			def apply(spacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/spaces/${spacesId}").addQueryStringParameters("name" -> name.toString))
 		}
 		class setup(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withSetUpSpaceRequest(body: Schema.SetUpSpaceRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Space])
+			def withSetUpSpaceRequest(body: Schema.SetUpSpaceRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Space])
 		}
 		object setup {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): setup = new setup(auth(ws.url(BASE_URL + s"v1/spaces:setup")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): setup = new setup(ws.url(BASE_URL + s"v1/spaces:setup").addQueryStringParameters())
 		}
 		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListSpacesResponse]) {
 			/** Optional. The maximum number of spaces to return. The service might return fewer than this value. If unspecified, at most 100 spaces are returned. The maximum value is 1000. If you use a value more than 1000, it's automatically changed to 1000. Negative values return an `INVALID_ARGUMENT` error.<br>Format: int32 */
@@ -92,19 +92,19 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
 			/** Optional. A query filter. You can filter spaces by the space type ([`space_type`](https://developers.google.com/workspace/chat/api/reference/rest/v1/spaces#spacetype)). To filter by space type, you must specify valid enum value, such as `SPACE` or `GROUP_CHAT` (the `space_type` can't be `SPACE_TYPE_UNSPECIFIED`). To query for multiple space types, use the `OR` operator. For example, the following queries are valid: ``` space_type = "SPACE" spaceType = "GROUP_CHAT" OR spaceType = "DIRECT_MESSAGE" ``` Invalid queries are rejected by the server with an `INVALID_ARGUMENT` error. */
 			def withFilter(filter: String) = new list(req.addQueryStringParameters("filter" -> filter.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.ListSpacesResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListSpacesResponse])
 		}
 		object list {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/spaces")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/spaces").addQueryStringParameters())
 			given Conversion[list, Future[Schema.ListSpacesResponse]] = (fun: list) => fun.apply()
 		}
 		class search(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.SearchSpacesResponse]) {
 			/** Optional. How the list of spaces is ordered. Supported attributes to order by are: - `membership_count.joined_direct_human_user_count` — Denotes the count of human users that have directly joined a space. - `last_active_time` — Denotes the time when last eligible item is added to any topic of this space. - `create_time` — Denotes the time of the space creation. Valid ordering operation values are: - `ASC` for ascending. Default value. - `DESC` for descending. The supported syntax are: - `membership_count.joined_direct_human_user_count DESC` - `membership_count.joined_direct_human_user_count ASC` - `last_active_time DESC` - `last_active_time ASC` - `create_time DESC` - `create_time ASC` */
 			def withOrderBy(orderBy: String) = new search(req.addQueryStringParameters("orderBy" -> orderBy.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.SearchSpacesResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.SearchSpacesResponse])
 		}
 		object search {
-			def apply(useAdminAccess: Boolean, pageSize: Int, pageToken: String, query: String)(using auth: AuthToken, ec: ExecutionContext): search = new search(auth(ws.url(BASE_URL + s"v1/spaces:search")).addQueryStringParameters("useAdminAccess" -> useAdminAccess.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "query" -> query.toString))
+			def apply(useAdminAccess: Boolean, pageSize: Int, pageToken: String, query: String)(using auth: AuthToken, ec: ExecutionContext): search = new search(ws.url(BASE_URL + s"v1/spaces:search").addQueryStringParameters("useAdminAccess" -> useAdminAccess.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString, "query" -> query.toString))
 			given Conversion[search, Future[Schema.SearchSpacesResponse]] = (fun: search) => fun.apply()
 		}
 		object messages {
@@ -117,42 +117,42 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 				def withMessageReplyOption(messageReplyOption: String) = new create(req.addQueryStringParameters("messageReplyOption" -> messageReplyOption.toString))
 				/** Optional. A custom ID for a message. Lets Chat apps get, update, or delete a message without needing to store the system-assigned ID in the message's resource name (represented in the message `name` field). The value for this field must meet the following requirements: &#42; Begins with `client-`. For example, `client-custom-name` is a valid custom ID, but `custom-name` is not. &#42; Contains up to 63 characters and only lowercase letters, numbers, and hyphens. &#42; Is unique within a space. A Chat app can't use the same custom ID for different messages. For details, see [Name a message](https://developers.google.com/workspace/chat/create-messages#name_a_created_message). */
 				def withMessageId(messageId: String) = new create(req.addQueryStringParameters("messageId" -> messageId.toString))
-				def withMessage(body: Schema.Message) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Message])
+				def withMessage(body: Schema.Message) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Message])
 			}
 			object create {
-				def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages").addQueryStringParameters("parent" -> parent.toString))
 			}
 			class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
 				/** Optional. When `true`, deleting a message also deletes its threaded replies. When `false`, if a message has threaded replies, deletion fails. Only applies when [authenticating as a user](https://developers.google.com/workspace/chat/authenticate-authorize-chat-user). Has no effect when [authenticating as a Chat app] (https://developers.google.com/workspace/chat/authenticate-authorize-chat-app). */
 				def withForce(force: Boolean) = new delete(req.addQueryStringParameters("force" -> force.toString))
-				def apply() = req.execute("DELETE").map(_.json.as[Schema.Empty])
+				def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 			}
 			object delete {
-				def apply(spacesId :PlayApi, messagesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}")).addQueryStringParameters("name" -> name.toString))
+				def apply(spacesId :PlayApi, messagesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}").addQueryStringParameters("name" -> name.toString))
 				given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 			}
 			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Message]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.Message])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Message])
 			}
 			object get {
-				def apply(spacesId :PlayApi, messagesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}")).addQueryStringParameters("name" -> name.toString))
+				def apply(spacesId :PlayApi, messagesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}").addQueryStringParameters("name" -> name.toString))
 				given Conversion[get, Future[Schema.Message]] = (fun: get) => fun.apply()
 			}
 			class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 				/** Optional. If `true` and the message isn't found, a new message is created and `updateMask` is ignored. The specified message ID must be [client-assigned](https://developers.google.com/workspace/chat/create-messages#name_a_created_message) or the request fails. */
 				def withAllowMissing(allowMissing: Boolean) = new update(req.addQueryStringParameters("allowMissing" -> allowMissing.toString))
-				def withMessage(body: Schema.Message) = req.withBody(Json.toJson(body)).execute("PUT").map(_.json.as[Schema.Message])
+				def withMessage(body: Schema.Message) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Message])
 			}
 			object update {
-				def apply(spacesId :PlayApi, messagesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}")).addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+				def apply(spacesId :PlayApi, messagesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 			}
 			class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 				/** Optional. If `true` and the message isn't found, a new message is created and `updateMask` is ignored. The specified message ID must be [client-assigned](https://developers.google.com/workspace/chat/create-messages#name_a_created_message) or the request fails. */
 				def withAllowMissing(allowMissing: Boolean) = new patch(req.addQueryStringParameters("allowMissing" -> allowMissing.toString))
-				def withMessage(body: Schema.Message) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Message])
+				def withMessage(body: Schema.Message) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Message])
 			}
 			object patch {
-				def apply(spacesId :PlayApi, messagesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}")).addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+				def apply(spacesId :PlayApi, messagesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 			}
 			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListMessagesResponse]) {
 				/** Optional. The maximum number of messages returned. The service might return fewer messages than this value. If unspecified, at most 25 are returned. The maximum value is 1000. If you use a value more than 1000, it's automatically changed to 1000. Negative values return an `INVALID_ARGUMENT` error.<br>Format: int32 */
@@ -165,18 +165,18 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 				def withOrderBy(orderBy: String) = new list(req.addQueryStringParameters("orderBy" -> orderBy.toString))
 				/** Optional. Whether to include deleted messages. Deleted messages include deleted time and metadata about their deletion, but message content is unavailable. */
 				def withShowDeleted(showDeleted: Boolean) = new list(req.addQueryStringParameters("showDeleted" -> showDeleted.toString))
-				def apply() = req.execute("GET").map(_.json.as[Schema.ListMessagesResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListMessagesResponse])
 			}
 			object list {
-				def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages").addQueryStringParameters("parent" -> parent.toString))
 				given Conversion[list, Future[Schema.ListMessagesResponse]] = (fun: list) => fun.apply()
 			}
 			object reactions {
 				class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withReaction(body: Schema.Reaction) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Reaction])
+					def withReaction(body: Schema.Reaction) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Reaction])
 				}
 				object create {
-					def apply(spacesId :PlayApi, messagesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}/reactions")).addQueryStringParameters("parent" -> parent.toString))
+					def apply(spacesId :PlayApi, messagesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}/reactions").addQueryStringParameters("parent" -> parent.toString))
 				}
 				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListReactionsResponse]) {
 					/** Optional. The maximum number of reactions returned. The service can return fewer reactions than this value. If unspecified, the default value is 25. The maximum value is 200; values above 200 are changed to 200.<br>Format: int32 */
@@ -185,36 +185,36 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 					def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
 					/** Optional. A query filter. You can filter reactions by [emoji](https://developers.google.com/workspace/chat/api/reference/rest/v1/Emoji) (either `emoji.unicode` or `emoji.custom_emoji.uid`) and [user](https://developers.google.com/workspace/chat/api/reference/rest/v1/User) (`user.name`). To filter reactions for multiple emojis or users, join similar fields with the `OR` operator, such as `emoji.unicode = "🙂" OR emoji.unicode = "👍"` and `user.name = "users/AAAAAA" OR user.name = "users/BBBBBB"`. To filter reactions by emoji and user, use the `AND` operator, such as `emoji.unicode = "🙂" AND user.name = "users/AAAAAA"`. If your query uses both `AND` and `OR`, group them with parentheses. For example, the following queries are valid: ``` user.name = "users/{user}" emoji.unicode = "🙂" emoji.custom_emoji.uid = "{uid}" emoji.unicode = "🙂" OR emoji.unicode = "👍" emoji.unicode = "🙂" OR emoji.custom_emoji.uid = "{uid}" emoji.unicode = "🙂" AND user.name = "users/{user}" (emoji.unicode = "🙂" OR emoji.custom_emoji.uid = "{uid}") AND user.name = "users/{user}" ``` The following queries are invalid: ``` emoji.unicode = "🙂" AND emoji.unicode = "👍" emoji.unicode = "🙂" AND emoji.custom_emoji.uid = "{uid}" emoji.unicode = "🙂" OR user.name = "users/{user}" emoji.unicode = "🙂" OR emoji.custom_emoji.uid = "{uid}" OR user.name = "users/{user}" emoji.unicode = "🙂" OR emoji.custom_emoji.uid = "{uid}" AND user.name = "users/{user}" ``` Invalid queries are rejected by the server with an `INVALID_ARGUMENT` error. */
 					def withFilter(filter: String) = new list(req.addQueryStringParameters("filter" -> filter.toString))
-					def apply() = req.execute("GET").map(_.json.as[Schema.ListReactionsResponse])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListReactionsResponse])
 				}
 				object list {
-					def apply(spacesId :PlayApi, messagesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}/reactions")).addQueryStringParameters("parent" -> parent.toString))
+					def apply(spacesId :PlayApi, messagesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}/reactions").addQueryStringParameters("parent" -> parent.toString))
 					given Conversion[list, Future[Schema.ListReactionsResponse]] = (fun: list) => fun.apply()
 				}
 				class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-					def apply() = req.execute("DELETE").map(_.json.as[Schema.Empty])
+					def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 				}
 				object delete {
-					def apply(spacesId :PlayApi, messagesId :PlayApi, reactionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}/reactions/${reactionsId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(spacesId :PlayApi, messagesId :PlayApi, reactionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}/reactions/${reactionsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 				}
 			}
 			object attachments {
 				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Attachment]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.Attachment])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Attachment])
 				}
 				object get {
-					def apply(spacesId :PlayApi, messagesId :PlayApi, attachmentsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}/attachments/${attachmentsId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(spacesId :PlayApi, messagesId :PlayApi, attachmentsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/spaces/${spacesId}/messages/${messagesId}/attachments/${attachmentsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[get, Future[Schema.Attachment]] = (fun: get) => fun.apply()
 				}
 			}
 		}
 		object spaceEvents {
 			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.SpaceEvent]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.SpaceEvent])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.SpaceEvent])
 			}
 			object get {
-				def apply(spacesId :PlayApi, spaceEventsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/spaceEvents/${spaceEventsId}")).addQueryStringParameters("name" -> name.toString))
+				def apply(spacesId :PlayApi, spaceEventsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/spaces/${spacesId}/spaceEvents/${spaceEventsId}").addQueryStringParameters("name" -> name.toString))
 				given Conversion[get, Future[Schema.SpaceEvent]] = (fun: get) => fun.apply()
 			}
 			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListSpaceEventsResponse]) {
@@ -224,10 +224,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 				def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
 				/** Required. A query filter. You must specify at least one event type (`event_type`) using the has `:` operator. To filter by multiple event types, use the `OR` operator. Omit batch event types in your filter. The request automatically returns any related batch events. For example, if you filter by new reactions (`google.workspace.chat.reaction.v1.created`), the server also returns batch new reactions events (`google.workspace.chat.reaction.v1.batchCreated`). For a list of supported event types, see the [`SpaceEvents` reference documentation](https://developers.google.com/workspace/chat/api/reference/rest/v1/spaces.spaceEvents#SpaceEvent.FIELDS.event_type). Optionally, you can also filter by start time (`start_time`) and end time (`end_time`): &#42; `start_time`: Exclusive timestamp from which to start listing space events. You can list events that occurred up to 28 days ago. If unspecified, lists space events from the past 28 days. &#42; `end_time`: Inclusive timestamp until which space events are listed. If unspecified, lists events up to the time of the request. To specify a start or end time, use the equals `=` operator and format in [RFC-3339](https://www.rfc-editor.org/rfc/rfc3339). To filter by both `start_time` and `end_time`, use the `AND` operator. For example, the following queries are valid: ``` start_time="2023-08-23T19:20:33+00:00" AND end_time="2023-08-23T19:21:54+00:00" ``` ``` start_time="2023-08-23T19:20:33+00:00" AND (event_types:"google.workspace.chat.space.v1.updated" OR event_types:"google.workspace.chat.message.v1.created") ``` The following queries are invalid: ``` start_time="2023-08-23T19:20:33+00:00" OR end_time="2023-08-23T19:21:54+00:00" ``` ``` event_types:"google.workspace.chat.space.v1.updated" AND event_types:"google.workspace.chat.message.v1.created" ``` Invalid queries are rejected by the server with an `INVALID_ARGUMENT` error. */
 				def withFilter(filter: String) = new list(req.addQueryStringParameters("filter" -> filter.toString))
-				def apply() = req.execute("GET").map(_.json.as[Schema.ListSpaceEventsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListSpaceEventsResponse])
 			}
 			object list {
-				def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/spaceEvents")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/spaces/${spacesId}/spaceEvents").addQueryStringParameters("parent" -> parent.toString))
 				given Conversion[list, Future[Schema.ListSpaceEventsResponse]] = (fun: list) => fun.apply()
 			}
 		}
@@ -235,18 +235,18 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 				/** Optional. When `true`, the method runs using the user's Google Workspace administrator privileges. The calling user must be a Google Workspace administrator with the [manage chat and spaces conversations privilege](https://support.google.com/a/answer/13369245). Requires the `chat.admin.memberships` [OAuth 2.0 scope](https://developers.google.com/workspace/chat/authenticate-authorize#chat-api-scopes). Creating app memberships or creating memberships for users outside the administrator's Google Workspace organization isn't supported using admin access. */
 				def withUseAdminAccess(useAdminAccess: Boolean) = new create(req.addQueryStringParameters("useAdminAccess" -> useAdminAccess.toString))
-				def withMembership(body: Schema.Membership) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Membership])
+				def withMembership(body: Schema.Membership) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Membership])
 			}
 			object create {
-				def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/members")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/spaces/${spacesId}/members").addQueryStringParameters("parent" -> parent.toString))
 			}
 			class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Membership]) {
 				/** Optional. When `true`, the method runs using the user's Google Workspace administrator privileges. The calling user must be a Google Workspace administrator with the [manage chat and spaces conversations privilege](https://support.google.com/a/answer/13369245). Requires the `chat.admin.memberships` [OAuth 2.0 scope](https://developers.google.com/workspace/chat/authenticate-authorize#chat-api-scopes). Deleting app memberships in a space isn't supported using admin access. */
 				def withUseAdminAccess(useAdminAccess: Boolean) = new delete(req.addQueryStringParameters("useAdminAccess" -> useAdminAccess.toString))
-				def apply() = req.execute("DELETE").map(_.json.as[Schema.Membership])
+				def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Membership])
 			}
 			object delete {
-				def apply(spacesId :PlayApi, membersId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/members/${membersId}")).addQueryStringParameters("name" -> name.toString))
+				def apply(spacesId :PlayApi, membersId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/spaces/${spacesId}/members/${membersId}").addQueryStringParameters("name" -> name.toString))
 				given Conversion[delete, Future[Schema.Membership]] = (fun: delete) => fun.apply()
 			}
 			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Membership]) {
@@ -254,19 +254,19 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 				def withName(name: String) = new get(req.addQueryStringParameters("name" -> name.toString))
 				/** Optional. When `true`, the method runs using the user's Google Workspace administrator privileges. The calling user must be a Google Workspace administrator with the [manage chat and spaces conversations privilege](https://support.google.com/a/answer/13369245). Requires the `chat.admin.memberships` or `chat.admin.memberships.readonly` [OAuth 2.0 scopes](https://developers.google.com/workspace/chat/authenticate-authorize#chat-api-scopes). Getting app memberships in a space isn't supported when using admin access. */
 				def withUseAdminAccess(useAdminAccess: Boolean) = new get(req.addQueryStringParameters("useAdminAccess" -> useAdminAccess.toString))
-				def apply() = req.execute("GET").map(_.json.as[Schema.Membership])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Membership])
 			}
 			object get {
-				def apply(spacesId :PlayApi, membersId :PlayApi)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/members/${membersId}")).addQueryStringParameters())
+				def apply(spacesId :PlayApi, membersId :PlayApi)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/spaces/${spacesId}/members/${membersId}").addQueryStringParameters())
 				given Conversion[get, Future[Schema.Membership]] = (fun: get) => fun.apply()
 			}
 			class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 				/** Optional. When `true`, the method runs using the user's Google Workspace administrator privileges. The calling user must be a Google Workspace administrator with the [manage chat and spaces conversations privilege](https://support.google.com/a/answer/13369245). Requires the `chat.admin.memberships` [OAuth 2.0 scope](https://developers.google.com/workspace/chat/authenticate-authorize#chat-api-scopes). */
 				def withUseAdminAccess(useAdminAccess: Boolean) = new patch(req.addQueryStringParameters("useAdminAccess" -> useAdminAccess.toString))
-				def withMembership(body: Schema.Membership) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Membership])
+				def withMembership(body: Schema.Membership) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Membership])
 			}
 			object patch {
-				def apply(spacesId :PlayApi, membersId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/members/${membersId}")).addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+				def apply(spacesId :PlayApi, membersId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/spaces/${spacesId}/members/${membersId}").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 			}
 			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListMembershipsResponse]) {
 				/** Optional. The maximum number of memberships to return. The service might return fewer than this value. If unspecified, at most 100 memberships are returned. The maximum value is 1000. If you use a value more than 1000, it's automatically changed to 1000. Negative values return an `INVALID_ARGUMENT` error.<br>Format: int32 */
@@ -281,10 +281,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 				def withShowInvited(showInvited: Boolean) = new list(req.addQueryStringParameters("showInvited" -> showInvited.toString))
 				/** Optional. When `true`, the method runs using the user's Google Workspace administrator privileges. The calling user must be a Google Workspace administrator with the [manage chat and spaces conversations privilege](https://support.google.com/a/answer/13369245). Requires either the `chat.admin.memberships.readonly` or `chat.admin.memberships` [OAuth 2.0 scope](https://developers.google.com/workspace/chat/authenticate-authorize#chat-api-scopes). Listing app memberships in a space isn't supported when using admin access. */
 				def withUseAdminAccess(useAdminAccess: Boolean) = new list(req.addQueryStringParameters("useAdminAccess" -> useAdminAccess.toString))
-				def apply() = req.execute("GET").map(_.json.as[Schema.ListMembershipsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListMembershipsResponse])
 			}
 			object list {
-				def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/spaces/${spacesId}/members")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(spacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/spaces/${spacesId}/members").addQueryStringParameters("parent" -> parent.toString))
 				given Conversion[list, Future[Schema.ListMembershipsResponse]] = (fun: list) => fun.apply()
 			}
 		}
@@ -292,24 +292,24 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	object users {
 		object spaces {
 			class getSpaceReadState(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.SpaceReadState]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.SpaceReadState])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.SpaceReadState])
 			}
 			object getSpaceReadState {
-				def apply(usersId :PlayApi, spacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): getSpaceReadState = new getSpaceReadState(auth(ws.url(BASE_URL + s"v1/users/${usersId}/spaces/${spacesId}/spaceReadState")).addQueryStringParameters("name" -> name.toString))
+				def apply(usersId :PlayApi, spacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): getSpaceReadState = new getSpaceReadState(ws.url(BASE_URL + s"v1/users/${usersId}/spaces/${spacesId}/spaceReadState").addQueryStringParameters("name" -> name.toString))
 				given Conversion[getSpaceReadState, Future[Schema.SpaceReadState]] = (fun: getSpaceReadState) => fun.apply()
 			}
 			class updateSpaceReadState(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withSpaceReadState(body: Schema.SpaceReadState) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.SpaceReadState])
+				def withSpaceReadState(body: Schema.SpaceReadState) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.SpaceReadState])
 			}
 			object updateSpaceReadState {
-				def apply(usersId :PlayApi, spacesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): updateSpaceReadState = new updateSpaceReadState(auth(ws.url(BASE_URL + s"v1/users/${usersId}/spaces/${spacesId}/spaceReadState")).addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+				def apply(usersId :PlayApi, spacesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): updateSpaceReadState = new updateSpaceReadState(ws.url(BASE_URL + s"v1/users/${usersId}/spaces/${spacesId}/spaceReadState").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 			}
 			object threads {
 				class getThreadReadState(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ThreadReadState]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.ThreadReadState])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ThreadReadState])
 				}
 				object getThreadReadState {
-					def apply(usersId :PlayApi, spacesId :PlayApi, threadsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): getThreadReadState = new getThreadReadState(auth(ws.url(BASE_URL + s"v1/users/${usersId}/spaces/${spacesId}/threads/${threadsId}/threadReadState")).addQueryStringParameters("name" -> name.toString))
+					def apply(usersId :PlayApi, spacesId :PlayApi, threadsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): getThreadReadState = new getThreadReadState(ws.url(BASE_URL + s"v1/users/${usersId}/spaces/${spacesId}/threads/${threadsId}/threadReadState").addQueryStringParameters("name" -> name.toString))
 					given Conversion[getThreadReadState, Future[Schema.ThreadReadState]] = (fun: getThreadReadState) => fun.apply()
 				}
 			}

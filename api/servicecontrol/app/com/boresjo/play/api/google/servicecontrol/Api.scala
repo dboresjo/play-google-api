@@ -16,16 +16,16 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object services {
 		class check(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withCheckRequest(body: Schema.CheckRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.CheckResponse])
+			def withCheckRequest(body: Schema.CheckRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.CheckResponse])
 		}
 		object check {
-			def apply(serviceName: String)(using auth: AuthToken, ec: ExecutionContext): check = new check(auth(ws.url(BASE_URL + s"v2/services/${serviceName}:check")).addQueryStringParameters())
+			def apply(serviceName: String)(using auth: AuthToken, ec: ExecutionContext): check = new check(ws.url(BASE_URL + s"v2/services/${serviceName}:check").addQueryStringParameters())
 		}
 		class report(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withReportRequest(body: Schema.ReportRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.ReportResponse])
+			def withReportRequest(body: Schema.ReportRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.ReportResponse])
 		}
 		object report {
-			def apply(serviceName: String)(using auth: AuthToken, ec: ExecutionContext): report = new report(auth(ws.url(BASE_URL + s"v2/services/${serviceName}:report")).addQueryStringParameters())
+			def apply(serviceName: String)(using auth: AuthToken, ec: ExecutionContext): report = new report(ws.url(BASE_URL + s"v2/services/${serviceName}:report").addQueryStringParameters())
 		}
 	}
 }

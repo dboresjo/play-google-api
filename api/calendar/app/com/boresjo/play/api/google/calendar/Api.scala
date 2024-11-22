@@ -18,10 +18,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 		class insert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 			/** Whether to send notifications about the calendar sharing change. Optional. The default is True. */
 			def withSendNotifications(sendNotifications: Boolean) = new insert(req.addQueryStringParameters("sendNotifications" -> sendNotifications.toString))
-			def withAclRule(body: Schema.AclRule) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.AclRule])
+			def withAclRule(body: Schema.AclRule) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.AclRule])
 		}
 		object insert {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): insert = new insert(auth(ws.url(BASE_URL + s"calendars/${calendarId}/acl")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"calendars/${calendarId}/acl").addQueryStringParameters())
 		}
 		class watch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 			/** Maximum number of entries returned on one result page. By default the value is 100 entries. The page size can never be larger than 250 entries. Optional.<br>Format: int32 */
@@ -35,40 +35,40 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new watch(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def withChannel(body: Schema.Channel) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Channel])
+			def withChannel(body: Schema.Channel) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
 		}
 		object watch {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): watch = new watch(auth(ws.url(BASE_URL + s"calendars/${calendarId}/acl/watch")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"calendars/${calendarId}/acl/watch").addQueryStringParameters())
 		}
 		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-			def apply() = req.execute("DELETE").map(_ => ())
+			def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
 		}
 		object delete {
-			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}")).addQueryStringParameters())
+			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
 			given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 		}
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.AclRule]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.AclRule])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.AclRule])
 		}
 		object get {
-			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}")).addQueryStringParameters())
+			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
 			given Conversion[get, Future[Schema.AclRule]] = (fun: get) => fun.apply()
 		}
 		class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 			/** Whether to send notifications about the calendar sharing change. Note that there are no notifications on access removal. Optional. The default is True. */
 			def withSendNotifications(sendNotifications: Boolean) = new update(req.addQueryStringParameters("sendNotifications" -> sendNotifications.toString))
-			def withAclRule(body: Schema.AclRule) = req.withBody(Json.toJson(body)).execute("PUT").map(_.json.as[Schema.AclRule])
+			def withAclRule(body: Schema.AclRule) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.AclRule])
 		}
 		object update {
-			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(auth(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}")).addQueryStringParameters())
+			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
 		}
 		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 			/** Whether to send notifications about the calendar sharing change. Note that there are no notifications on access removal. Optional. The default is True. */
 			def withSendNotifications(sendNotifications: Boolean) = new patch(req.addQueryStringParameters("sendNotifications" -> sendNotifications.toString))
-			def withAclRule(body: Schema.AclRule) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.AclRule])
+			def withAclRule(body: Schema.AclRule) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.AclRule])
 		}
 		object patch {
-			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}")).addQueryStringParameters())
+			def apply(calendarId: String, ruleId: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"calendars/${calendarId}/acl/${ruleId}").addQueryStringParameters())
 		}
 		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Acl]) {
 			/** Maximum number of entries returned on one result page. By default the value is 100 entries. The page size can never be larger than 250 entries. Optional.<br>Format: int32 */
@@ -82,10 +82,10 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new list(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.Acl])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Acl])
 		}
 		object list {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"calendars/${calendarId}/acl")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"calendars/${calendarId}/acl").addQueryStringParameters())
 			given Conversion[list, Future[Schema.Acl]] = (fun: list) => fun.apply()
 		}
 	}
@@ -93,10 +93,10 @@ Optional. The default is to return all entries. */
 		class insert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 			/** Whether to use the foregroundColor and backgroundColor fields to write the calendar colors (RGB). If this feature is used, the index-based colorId field will be set to the best matching option automatically. Optional. The default is False. */
 			def withColorRgbFormat(colorRgbFormat: Boolean) = new insert(req.addQueryStringParameters("colorRgbFormat" -> colorRgbFormat.toString))
-			def withCalendarListEntry(body: Schema.CalendarListEntry) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.CalendarListEntry])
+			def withCalendarListEntry(body: Schema.CalendarListEntry) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.CalendarListEntry])
 		}
 		object insert {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): insert = new insert(auth(ws.url(BASE_URL + s"users/me/calendarList")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"users/me/calendarList").addQueryStringParameters())
 		}
 		class watch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 			/** Maximum number of entries returned on one result page. By default the value is 100 entries. The page size can never be larger than 250 entries. Optional.<br>Format: int32 */
@@ -115,40 +115,40 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new watch(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def withChannel(body: Schema.Channel) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Channel])
+			def withChannel(body: Schema.Channel) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
 		}
 		object watch {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): watch = new watch(auth(ws.url(BASE_URL + s"users/me/calendarList/watch")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"users/me/calendarList/watch").addQueryStringParameters())
 		}
 		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-			def apply() = req.execute("DELETE").map(_ => ())
+			def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
 		}
 		object delete {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
 			given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 		}
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.CalendarListEntry]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.CalendarListEntry])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.CalendarListEntry])
 		}
 		object get {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
 			given Conversion[get, Future[Schema.CalendarListEntry]] = (fun: get) => fun.apply()
 		}
 		class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 			/** Whether to use the foregroundColor and backgroundColor fields to write the calendar colors (RGB). If this feature is used, the index-based colorId field will be set to the best matching option automatically. Optional. The default is False. */
 			def withColorRgbFormat(colorRgbFormat: Boolean) = new update(req.addQueryStringParameters("colorRgbFormat" -> colorRgbFormat.toString))
-			def withCalendarListEntry(body: Schema.CalendarListEntry) = req.withBody(Json.toJson(body)).execute("PUT").map(_.json.as[Schema.CalendarListEntry])
+			def withCalendarListEntry(body: Schema.CalendarListEntry) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.CalendarListEntry])
 		}
 		object update {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(auth(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
 		}
 		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 			/** Whether to use the foregroundColor and backgroundColor fields to write the calendar colors (RGB). If this feature is used, the index-based colorId field will be set to the best matching option automatically. Optional. The default is False. */
 			def withColorRgbFormat(colorRgbFormat: Boolean) = new patch(req.addQueryStringParameters("colorRgbFormat" -> colorRgbFormat.toString))
-			def withCalendarListEntry(body: Schema.CalendarListEntry) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.CalendarListEntry])
+			def withCalendarListEntry(body: Schema.CalendarListEntry) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.CalendarListEntry])
 		}
 		object patch {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"users/me/calendarList/${calendarId}").addQueryStringParameters())
 		}
 		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.CalendarList]) {
 			/** Maximum number of entries returned on one result page. By default the value is 100 entries. The page size can never be larger than 250 entries. Optional.<br>Format: int32 */
@@ -167,77 +167,77 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new list(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.CalendarList])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.CalendarList])
 		}
 		object list {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"users/me/calendarList")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"users/me/calendarList").addQueryStringParameters())
 			given Conversion[list, Future[Schema.CalendarList]] = (fun: list) => fun.apply()
 		}
 	}
 	object calendars {
 		class insert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withCalendar(body: Schema.Calendar) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Calendar])
+			def withCalendar(body: Schema.Calendar) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Calendar])
 		}
 		object insert {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): insert = new insert(auth(ws.url(BASE_URL + s"calendars")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"calendars").addQueryStringParameters())
 		}
 		class clear(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-			def apply() = req.execute("POST").map(_ => ())
+			def apply() = auth.exec(req,_.execute("POST")).map(_ => ())
 		}
 		object clear {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): clear = new clear(auth(ws.url(BASE_URL + s"calendars/${calendarId}/clear")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): clear = new clear(ws.url(BASE_URL + s"calendars/${calendarId}/clear").addQueryStringParameters())
 			given Conversion[clear, Future[Unit]] = (fun: clear) => fun.apply()
 		}
 		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-			def apply() = req.execute("DELETE").map(_ => ())
+			def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
 		}
 		object delete {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"calendars/${calendarId}")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
 			given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 		}
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Calendar]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.Calendar])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Calendar])
 		}
 		object get {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"calendars/${calendarId}")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
 			given Conversion[get, Future[Schema.Calendar]] = (fun: get) => fun.apply()
 		}
 		class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withCalendar(body: Schema.Calendar) = req.withBody(Json.toJson(body)).execute("PUT").map(_.json.as[Schema.Calendar])
+			def withCalendar(body: Schema.Calendar) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Calendar])
 		}
 		object update {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(auth(ws.url(BASE_URL + s"calendars/${calendarId}")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
 		}
 		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withCalendar(body: Schema.Calendar) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Calendar])
+			def withCalendar(body: Schema.Calendar) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Calendar])
 		}
 		object patch {
-			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"calendars/${calendarId}")).addQueryStringParameters())
+			def apply(calendarId: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"calendars/${calendarId}").addQueryStringParameters())
 		}
 	}
 	object channels {
 		class stop(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withChannel(body: Schema.Channel) = req.withBody(Json.toJson(body)).execute("POST").map(_ => ())
+			def withChannel(body: Schema.Channel) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_ => ())
 		}
 		object stop {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): stop = new stop(auth(ws.url(BASE_URL + s"channels/stop")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): stop = new stop(ws.url(BASE_URL + s"channels/stop").addQueryStringParameters())
 		}
 	}
 	object colors {
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Colors]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.Colors])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Colors])
 		}
 		object get {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"colors")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"colors").addQueryStringParameters())
 			given Conversion[get, Future[Schema.Colors]] = (fun: get) => fun.apply()
 		}
 	}
 	object events {
 		class move(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Event]) {
-			def apply() = req.execute("POST").map(_.json.as[Schema.Event])
+			def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.Event])
 		}
 		object move {
-			def apply(calendarId: String, destination: String, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): move = new move(auth(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}/move")).addQueryStringParameters("destination" -> destination.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
+			def apply(calendarId: String, destination: String, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): move = new move(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}/move").addQueryStringParameters("destination" -> destination.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
 			given Conversion[move, Future[Schema.Event]] = (fun: move) => fun.apply()
 		}
 		class insert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
@@ -245,31 +245,31 @@ Optional. The default is to return all entries. */
 			def withMaxAttendees(maxAttendees: Int) = new insert(req.addQueryStringParameters("maxAttendees" -> maxAttendees.toString))
 			/** Whether API client performing operation supports event attachments. Optional. The default is False. */
 			def withSupportsAttachments(supportsAttachments: Boolean) = new insert(req.addQueryStringParameters("supportsAttachments" -> supportsAttachments.toString))
-			def withEvent(body: Schema.Event) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Event])
+			def withEvent(body: Schema.Event) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Event])
 		}
 		object insert {
-			def apply(calendarId: String, conferenceDataVersion: Int, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): insert = new insert(auth(ws.url(BASE_URL + s"calendars/${calendarId}/events")).addQueryStringParameters("conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
+			def apply(calendarId: String, conferenceDataVersion: Int, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): insert = new insert(ws.url(BASE_URL + s"calendars/${calendarId}/events").addQueryStringParameters("conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
 		}
 		class quickAdd(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Event]) {
-			def apply() = req.execute("POST").map(_.json.as[Schema.Event])
+			def apply() = auth.exec(req,_.execute("POST")).map(_.json.as[Schema.Event])
 		}
 		object quickAdd {
-			def apply(calendarId: String, sendNotifications: Boolean, sendUpdates: String, text: String)(using auth: AuthToken, ec: ExecutionContext): quickAdd = new quickAdd(auth(ws.url(BASE_URL + s"calendars/${calendarId}/events/quickAdd")).addQueryStringParameters("sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString, "text" -> text.toString))
+			def apply(calendarId: String, sendNotifications: Boolean, sendUpdates: String, text: String)(using auth: AuthToken, ec: ExecutionContext): quickAdd = new quickAdd(ws.url(BASE_URL + s"calendars/${calendarId}/events/quickAdd").addQueryStringParameters("sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString, "text" -> text.toString))
 			given Conversion[quickAdd, Future[Schema.Event]] = (fun: quickAdd) => fun.apply()
 		}
 		class `import`(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 			/** Whether API client performing operation supports event attachments. Optional. The default is False. */
 			def withSupportsAttachments(supportsAttachments: Boolean) = new `import`(req.addQueryStringParameters("supportsAttachments" -> supportsAttachments.toString))
-			def withEvent(body: Schema.Event) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Event])
+			def withEvent(body: Schema.Event) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Event])
 		}
 		object `import` {
-			def apply(calendarId: String, conferenceDataVersion: Int)(using auth: AuthToken, ec: ExecutionContext): `import` = new `import`(auth(ws.url(BASE_URL + s"calendars/${calendarId}/events/import")).addQueryStringParameters("conferenceDataVersion" -> conferenceDataVersion.toString))
+			def apply(calendarId: String, conferenceDataVersion: Int)(using auth: AuthToken, ec: ExecutionContext): `import` = new `import`(ws.url(BASE_URL + s"calendars/${calendarId}/events/import").addQueryStringParameters("conferenceDataVersion" -> conferenceDataVersion.toString))
 		}
 		class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Unit]) {
-			def apply() = req.execute("DELETE").map(_ => ())
+			def apply() = auth.exec(req,_.execute("DELETE")).map(_ => ())
 		}
 		object delete {
-			def apply(calendarId: String, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}")).addQueryStringParameters("sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
+			def apply(calendarId: String, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
 			given Conversion[delete, Future[Unit]] = (fun: delete) => fun.apply()
 		}
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Event]) {
@@ -277,10 +277,10 @@ Optional. The default is to return all entries. */
 			def withMaxAttendees(maxAttendees: Int) = new get(req.addQueryStringParameters("maxAttendees" -> maxAttendees.toString))
 			/** Time zone used in the response. Optional. The default is the time zone of the calendar. */
 			def withTimeZone(timeZone: String) = new get(req.addQueryStringParameters("timeZone" -> timeZone.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.Event])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Event])
 		}
 		object get {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, eventId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}")).addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, eventId: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString))
 			given Conversion[get, Future[Schema.Event]] = (fun: get) => fun.apply()
 		}
 		class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
@@ -288,20 +288,20 @@ Optional. The default is to return all entries. */
 			def withMaxAttendees(maxAttendees: Int) = new update(req.addQueryStringParameters("maxAttendees" -> maxAttendees.toString))
 			/** Whether API client performing operation supports event attachments. Optional. The default is False. */
 			def withSupportsAttachments(supportsAttachments: Boolean) = new update(req.addQueryStringParameters("supportsAttachments" -> supportsAttachments.toString))
-			def withEvent(body: Schema.Event) = req.withBody(Json.toJson(body)).execute("PUT").map(_.json.as[Schema.Event])
+			def withEvent(body: Schema.Event) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.Event])
 		}
 		object update {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, conferenceDataVersion: Int, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(auth(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}")).addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, conferenceDataVersion: Int, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
 		}
 		class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
 			/** The maximum number of attendees to include in the response. If there are more than the specified number of attendees, only the participant is returned. Optional.<br>Format: int32 */
 			def withMaxAttendees(maxAttendees: Int) = new patch(req.addQueryStringParameters("maxAttendees" -> maxAttendees.toString))
 			/** Whether API client performing operation supports event attachments. Optional. The default is False. */
 			def withSupportsAttachments(supportsAttachments: Boolean) = new patch(req.addQueryStringParameters("supportsAttachments" -> supportsAttachments.toString))
-			def withEvent(body: Schema.Event) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Event])
+			def withEvent(body: Schema.Event) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Event])
 		}
 		object patch {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, conferenceDataVersion: Int, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}")).addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, conferenceDataVersion: Int, eventId: String, sendNotifications: Boolean, sendUpdates: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "conferenceDataVersion" -> conferenceDataVersion.toString, "sendNotifications" -> sendNotifications.toString, "sendUpdates" -> sendUpdates.toString))
 		}
 		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Events]) {
 			/** Event types to return. Optional. This parameter can be repeated multiple times to return events of different types. If unset, returns all event types.<br>Possible values:<br>birthday: Special all-day events with an annual recurrence.<br>default: Regular events.<br>focusTime: Focus time events.<br>fromGmail: Events from Gmail.<br>outOfOffice: Out of office events.<br>workingLocation: Working location events. */
@@ -360,10 +360,10 @@ Optional. The default is to return all entries. */
 			def withTimeZone(timeZone: String) = new list(req.addQueryStringParameters("timeZone" -> timeZone.toString))
 			/** Lower bound for an event's last modification time (as a RFC3339 timestamp) to filter by. When specified, entries deleted since this time will always be included regardless of showDeleted. Optional. The default is not to filter by last modification time.<br>Format: date-time */
 			def withUpdatedMin(updatedMin: String) = new list(req.addQueryStringParameters("updatedMin" -> updatedMin.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.Events])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Events])
 		}
 		object list {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, privateExtendedProperty: String, sharedExtendedProperty: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"calendars/${calendarId}/events")).addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "privateExtendedProperty" -> privateExtendedProperty.toString, "sharedExtendedProperty" -> sharedExtendedProperty.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, privateExtendedProperty: String, sharedExtendedProperty: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"calendars/${calendarId}/events").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "privateExtendedProperty" -> privateExtendedProperty.toString, "sharedExtendedProperty" -> sharedExtendedProperty.toString))
 			given Conversion[list, Future[Schema.Events]] = (fun: list) => fun.apply()
 		}
 		class watch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
@@ -423,10 +423,10 @@ Optional. The default is to return all entries. */
 			def withTimeZone(timeZone: String) = new watch(req.addQueryStringParameters("timeZone" -> timeZone.toString))
 			/** Lower bound for an event's last modification time (as a RFC3339 timestamp) to filter by. When specified, entries deleted since this time will always be included regardless of showDeleted. Optional. The default is not to filter by last modification time.<br>Format: date-time */
 			def withUpdatedMin(updatedMin: String) = new watch(req.addQueryStringParameters("updatedMin" -> updatedMin.toString))
-			def withChannel(body: Schema.Channel) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Channel])
+			def withChannel(body: Schema.Channel) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
 		}
 		object watch {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, privateExtendedProperty: String, sharedExtendedProperty: String)(using auth: AuthToken, ec: ExecutionContext): watch = new watch(auth(ws.url(BASE_URL + s"calendars/${calendarId}/events/watch")).addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "privateExtendedProperty" -> privateExtendedProperty.toString, "sharedExtendedProperty" -> sharedExtendedProperty.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, privateExtendedProperty: String, sharedExtendedProperty: String)(using auth: AuthToken, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"calendars/${calendarId}/events/watch").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString, "privateExtendedProperty" -> privateExtendedProperty.toString, "sharedExtendedProperty" -> sharedExtendedProperty.toString))
 		}
 		class instances(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Events]) {
 			/** The maximum number of attendees to include in the response. If there are more than the specified number of attendees, only the participant is returned. Optional.<br>Format: int32 */
@@ -445,27 +445,27 @@ Optional. The default is to return all entries. */
 			def withTimeMin(timeMin: String) = new instances(req.addQueryStringParameters("timeMin" -> timeMin.toString))
 			/** Time zone used in the response. Optional. The default is the time zone of the calendar. */
 			def withTimeZone(timeZone: String) = new instances(req.addQueryStringParameters("timeZone" -> timeZone.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.Events])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Events])
 		}
 		object instances {
-			def apply(alwaysIncludeEmail: Boolean, calendarId: String, eventId: String)(using auth: AuthToken, ec: ExecutionContext): instances = new instances(auth(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}/instances")).addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString))
+			def apply(alwaysIncludeEmail: Boolean, calendarId: String, eventId: String)(using auth: AuthToken, ec: ExecutionContext): instances = new instances(ws.url(BASE_URL + s"calendars/${calendarId}/events/${eventId}/instances").addQueryStringParameters("alwaysIncludeEmail" -> alwaysIncludeEmail.toString))
 			given Conversion[instances, Future[Schema.Events]] = (fun: instances) => fun.apply()
 		}
 	}
 	object freebusy {
 		class query(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withFreeBusyRequest(body: Schema.FreeBusyRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.FreeBusyResponse])
+			def withFreeBusyRequest(body: Schema.FreeBusyRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.FreeBusyResponse])
 		}
 		object query {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): query = new query(auth(ws.url(BASE_URL + s"freeBusy")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): query = new query(ws.url(BASE_URL + s"freeBusy").addQueryStringParameters())
 		}
 	}
 	object settings {
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Setting]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.Setting])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Setting])
 		}
 		object get {
-			def apply(setting: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"users/me/settings/${setting}")).addQueryStringParameters())
+			def apply(setting: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"users/me/settings/${setting}").addQueryStringParameters())
 			given Conversion[get, Future[Schema.Setting]] = (fun: get) => fun.apply()
 		}
 		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Settings]) {
@@ -478,10 +478,10 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new list(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.Settings])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Settings])
 		}
 		object list {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"users/me/settings")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"users/me/settings").addQueryStringParameters())
 			given Conversion[list, Future[Schema.Settings]] = (fun: list) => fun.apply()
 		}
 		class watch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
@@ -494,10 +494,10 @@ If the syncToken expires, the server will respond with a 410 GONE response code 
 Learn more about incremental synchronization.
 Optional. The default is to return all entries. */
 			def withSyncToken(syncToken: String) = new watch(req.addQueryStringParameters("syncToken" -> syncToken.toString))
-			def withChannel(body: Schema.Channel) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Channel])
+			def withChannel(body: Schema.Channel) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Channel])
 		}
 		object watch {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): watch = new watch(auth(ws.url(BASE_URL + s"users/me/settings/watch")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): watch = new watch(ws.url(BASE_URL + s"users/me/settings/watch").addQueryStringParameters())
 		}
 	}
 }

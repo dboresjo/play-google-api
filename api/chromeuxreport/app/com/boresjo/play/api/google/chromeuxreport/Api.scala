@@ -16,16 +16,16 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object records {
 		class queryRecord(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withQueryRequest(body: Schema.QueryRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.QueryResponse])
+			def withQueryRequest(body: Schema.QueryRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.QueryResponse])
 		}
 		object queryRecord {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): queryRecord = new queryRecord(auth(ws.url(BASE_URL + s"v1/records:queryRecord")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): queryRecord = new queryRecord(ws.url(BASE_URL + s"v1/records:queryRecord").addQueryStringParameters())
 		}
 		class queryHistoryRecord(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withQueryHistoryRequest(body: Schema.QueryHistoryRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.QueryHistoryResponse])
+			def withQueryHistoryRequest(body: Schema.QueryHistoryRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.QueryHistoryResponse])
 		}
 		object queryHistoryRecord {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): queryHistoryRecord = new queryHistoryRecord(auth(ws.url(BASE_URL + s"v1/records:queryHistoryRecord")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): queryHistoryRecord = new queryHistoryRecord(ws.url(BASE_URL + s"v1/records:queryHistoryRecord").addQueryStringParameters())
 		}
 	}
 }

@@ -16,10 +16,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object flights {
 		class computeFlightEmissions(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withComputeFlightEmissionsRequest(body: Schema.ComputeFlightEmissionsRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.ComputeFlightEmissionsResponse])
+			def withComputeFlightEmissionsRequest(body: Schema.ComputeFlightEmissionsRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.ComputeFlightEmissionsResponse])
 		}
 		object computeFlightEmissions {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): computeFlightEmissions = new computeFlightEmissions(auth(ws.url(BASE_URL + s"v1/flights:computeFlightEmissions")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): computeFlightEmissions = new computeFlightEmissions(ws.url(BASE_URL + s"v1/flights:computeFlightEmissions").addQueryStringParameters())
 		}
 	}
 }

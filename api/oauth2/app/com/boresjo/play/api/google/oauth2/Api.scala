@@ -16,19 +16,19 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object userinfo {
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Userinfo]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.Userinfo])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Userinfo])
 		}
 		object get {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"oauth2/v2/userinfo")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"oauth2/v2/userinfo").addQueryStringParameters())
 			given Conversion[get, Future[Schema.Userinfo]] = (fun: get) => fun.apply()
 		}
 		object v2 {
 			object me {
 				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Userinfo]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.Userinfo])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Userinfo])
 				}
 				object get {
-					def apply()(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"userinfo/v2/me")).addQueryStringParameters())
+					def apply()(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"userinfo/v2/me").addQueryStringParameters())
 					given Conversion[get, Future[Schema.Userinfo]] = (fun: get) => fun.apply()
 				}
 			}

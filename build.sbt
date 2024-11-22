@@ -1,7 +1,7 @@
 name := "play-google-api"
 
 ThisBuild / organization := "com.boresjo"
-ThisBuild / version := "1.0-SNAPSHOT"
+ThisBuild / scalaVersion := "3.3.4"
 
 ThisBuild / maxErrors := 1
 

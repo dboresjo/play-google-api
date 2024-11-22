@@ -17,10 +17,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	object projects {
 		object messages {
 			class send(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withSendMessageRequest(body: Schema.SendMessageRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Message])
+				def withSendMessageRequest(body: Schema.SendMessageRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Message])
 			}
 			object send {
-				def apply(projectsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): send = new send(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/messages:send")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(projectsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): send = new send(ws.url(BASE_URL + s"v1/projects/${projectsId}/messages:send").addQueryStringParameters("parent" -> parent.toString))
 			}
 		}
 	}

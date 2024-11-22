@@ -16,17 +16,17 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object accounts {
 		class getNotificationSetting(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.NotificationSetting]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.NotificationSetting])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.NotificationSetting])
 		}
 		object getNotificationSetting {
-			def apply(accountsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): getNotificationSetting = new getNotificationSetting(auth(ws.url(BASE_URL + s"v1/accounts/${accountsId}/notificationSetting")).addQueryStringParameters("name" -> name.toString))
+			def apply(accountsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): getNotificationSetting = new getNotificationSetting(ws.url(BASE_URL + s"v1/accounts/${accountsId}/notificationSetting").addQueryStringParameters("name" -> name.toString))
 			given Conversion[getNotificationSetting, Future[Schema.NotificationSetting]] = (fun: getNotificationSetting) => fun.apply()
 		}
 		class updateNotificationSetting(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withNotificationSetting(body: Schema.NotificationSetting) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.NotificationSetting])
+			def withNotificationSetting(body: Schema.NotificationSetting) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.NotificationSetting])
 		}
 		object updateNotificationSetting {
-			def apply(accountsId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): updateNotificationSetting = new updateNotificationSetting(auth(ws.url(BASE_URL + s"v1/accounts/${accountsId}/notificationSetting")).addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+			def apply(accountsId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): updateNotificationSetting = new updateNotificationSetting(ws.url(BASE_URL + s"v1/accounts/${accountsId}/notificationSetting").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 		}
 	}
 }

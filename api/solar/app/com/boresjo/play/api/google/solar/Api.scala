@@ -20,19 +20,19 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			def withExperiments(experiments: String) = new findClosest(req.addQueryStringParameters("experiments" -> experiments.toString))
 			/** Optional. The minimum quality level allowed in the results. No result with lower quality than this will be returned. Not specifying this is equivalent to restricting to HIGH quality only.<br>Possible values:<br>IMAGERY_QUALITY_UNSPECIFIED: No quality is known.<br>HIGH: Solar data is derived from aerial imagery captured at low-altitude and processed at 0.1 m/pixel.<br>MEDIUM: Solar data is derived from enhanced aerial imagery captured at high-altitude and processed at 0.25 m/pixel.<br>LOW: Solar data is derived from enhanced satellite imagery processed at 0.25 m/pixel.<br>BASE: Solar data is derived from enhanced satellite imagery processed at 0.25 m/pixel. */
 			def withRequiredQuality(requiredQuality: String) = new findClosest(req.addQueryStringParameters("requiredQuality" -> requiredQuality.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.BuildingInsights])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.BuildingInsights])
 		}
 		object findClosest {
-			def apply(locationLongitude: Number, locationLatitude: Number)(using auth: AuthToken, ec: ExecutionContext): findClosest = new findClosest(auth(ws.url(BASE_URL + s"v1/buildingInsights:findClosest")).addQueryStringParameters("location.longitude" -> locationLongitude.toString, "location.latitude" -> locationLatitude.toString))
+			def apply(locationLongitude: Number, locationLatitude: Number)(using auth: AuthToken, ec: ExecutionContext): findClosest = new findClosest(ws.url(BASE_URL + s"v1/buildingInsights:findClosest").addQueryStringParameters("location.longitude" -> locationLongitude.toString, "location.latitude" -> locationLatitude.toString))
 			given Conversion[findClosest, Future[Schema.BuildingInsights]] = (fun: findClosest) => fun.apply()
 		}
 	}
 	object geoTiff {
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.HttpBody]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.HttpBody])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.HttpBody])
 		}
 		object get {
-			def apply(id: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/geoTiff:get")).addQueryStringParameters("id" -> id.toString))
+			def apply(id: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/geoTiff:get").addQueryStringParameters("id" -> id.toString))
 			given Conversion[get, Future[Schema.HttpBody]] = (fun: get) => fun.apply()
 		}
 	}
@@ -48,10 +48,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 			def withPixelSizeMeters(pixelSizeMeters: Number) = new get(req.addQueryStringParameters("pixelSizeMeters" -> pixelSizeMeters.toString))
 			/** Optional. Specifies the pre-GA experiments to enable.<br>Possible values:<br>EXPERIMENT_UNSPECIFIED: No experiments are specified.<br>EXPANDED_COVERAGE: Expands the geographic region available for querying solar data. */
 			def withExperiments(experiments: String) = new get(req.addQueryStringParameters("experiments" -> experiments.toString))
-			def apply() = req.execute("GET").map(_.json.as[Schema.DataLayers])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.DataLayers])
 		}
 		object get {
-			def apply(radiusMeters: Number, locationLatitude: Number, locationLongitude: Number)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/dataLayers:get")).addQueryStringParameters("radiusMeters" -> radiusMeters.toString, "location.latitude" -> locationLatitude.toString, "location.longitude" -> locationLongitude.toString))
+			def apply(radiusMeters: Number, locationLatitude: Number, locationLongitude: Number)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/dataLayers:get").addQueryStringParameters("radiusMeters" -> radiusMeters.toString, "location.latitude" -> locationLatitude.toString, "location.longitude" -> locationLongitude.toString))
 			given Conversion[get, Future[Schema.DataLayers]] = (fun: get) => fun.apply()
 		}
 	}

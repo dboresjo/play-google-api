@@ -16,10 +16,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object hashes {
 		class search(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GoogleSecuritySafebrowsingV5SearchHashesResponse]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.GoogleSecuritySafebrowsingV5SearchHashesResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GoogleSecuritySafebrowsingV5SearchHashesResponse])
 		}
 		object search {
-			def apply(hashPrefixes: String)(using auth: AuthToken, ec: ExecutionContext): search = new search(auth(ws.url(BASE_URL + s"v5/hashes:search")).addQueryStringParameters("hashPrefixes" -> hashPrefixes.toString))
+			def apply(hashPrefixes: String)(using auth: AuthToken, ec: ExecutionContext): search = new search(ws.url(BASE_URL + s"v5/hashes:search").addQueryStringParameters("hashPrefixes" -> hashPrefixes.toString))
 			given Conversion[search, Future[Schema.GoogleSecuritySafebrowsingV5SearchHashesResponse]] = (fun: search) => fun.apply()
 		}
 	}

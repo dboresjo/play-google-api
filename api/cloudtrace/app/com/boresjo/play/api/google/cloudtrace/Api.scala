@@ -17,17 +17,17 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	object projects {
 		object traces {
 			class batchWrite(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withBatchWriteSpansRequest(body: Schema.BatchWriteSpansRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Empty])
+				def withBatchWriteSpansRequest(body: Schema.BatchWriteSpansRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Empty])
 			}
 			object batchWrite {
-				def apply(projectsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): batchWrite = new batchWrite(auth(ws.url(BASE_URL + s"v2/projects/${projectsId}/traces:batchWrite")).addQueryStringParameters("name" -> name.toString))
+				def apply(projectsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): batchWrite = new batchWrite(ws.url(BASE_URL + s"v2/projects/${projectsId}/traces:batchWrite").addQueryStringParameters("name" -> name.toString))
 			}
 			object spans {
 				class createSpan(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withSpan(body: Schema.Span) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Span])
+					def withSpan(body: Schema.Span) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Span])
 				}
 				object createSpan {
-					def apply(projectsId :PlayApi, tracesId :PlayApi, spansId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): createSpan = new createSpan(auth(ws.url(BASE_URL + s"v2/projects/${projectsId}/traces/${tracesId}/spans/${spansId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(projectsId :PlayApi, tracesId :PlayApi, spansId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): createSpan = new createSpan(ws.url(BASE_URL + s"v2/projects/${projectsId}/traces/${tracesId}/spans/${spansId}").addQueryStringParameters("name" -> name.toString))
 				}
 			}
 		}

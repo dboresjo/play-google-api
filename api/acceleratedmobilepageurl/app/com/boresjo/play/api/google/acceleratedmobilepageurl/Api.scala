@@ -16,10 +16,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object ampUrls {
 		class batchGet(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withBatchGetAmpUrlsRequest(body: Schema.BatchGetAmpUrlsRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.BatchGetAmpUrlsResponse])
+			def withBatchGetAmpUrlsRequest(body: Schema.BatchGetAmpUrlsRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.BatchGetAmpUrlsResponse])
 		}
 		object batchGet {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): batchGet = new batchGet(auth(ws.url(BASE_URL + s"v1/ampUrls:batchGet")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): batchGet = new batchGet(ws.url(BASE_URL + s"v1/ampUrls:batchGet").addQueryStringParameters())
 		}
 	}
 }

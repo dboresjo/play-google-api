@@ -23,19 +23,19 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 				def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
 				/** Optional. A page token, received from a previous `ListProducts` call. Provide this to retrieve the subsequent page. When paginating, all other parameters provided to `ListProducts` must match the call that provided the page token. */
 				def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
-				def apply() = req.execute("GET").map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1ListProductsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1ListProductsResponse])
 			}
 			object list {
-				def apply(partnersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/partners/${partnersId}/products")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(partnersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/partners/${partnersId}/products").addQueryStringParameters("parent" -> parent.toString))
 				given Conversion[list, Future[Schema.GoogleCloudPaymentsResellerSubscriptionV1ListProductsResponse]] = (fun: list) => fun.apply()
 			}
 		}
 		object userSessions {
 			class generate(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGoogleCloudPaymentsResellerSubscriptionV1GenerateUserSessionRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1GenerateUserSessionRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1GenerateUserSessionResponse])
+				def withGoogleCloudPaymentsResellerSubscriptionV1GenerateUserSessionRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1GenerateUserSessionRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1GenerateUserSessionResponse])
 			}
 			object generate {
-				def apply(partnersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): generate = new generate(auth(ws.url(BASE_URL + s"v1/partners/${partnersId}/userSessions:generate")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(partnersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): generate = new generate(ws.url(BASE_URL + s"v1/partners/${partnersId}/userSessions:generate").addQueryStringParameters("parent" -> parent.toString))
 			}
 		}
 		object promotions {
@@ -46,62 +46,62 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 				def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
 				/** Optional. The maximum number of promotions to return. The service may return fewer than this value. If unspecified, at most 50 products will be returned. The maximum value is 1000; values above 1000 will be coerced to 1000.<br>Format: int32 */
 				def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
-				def apply() = req.execute("GET").map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1ListPromotionsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1ListPromotionsResponse])
 			}
 			object list {
-				def apply(partnersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/partners/${partnersId}/promotions")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(partnersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/partners/${partnersId}/promotions").addQueryStringParameters("parent" -> parent.toString))
 				given Conversion[list, Future[Schema.GoogleCloudPaymentsResellerSubscriptionV1ListPromotionsResponse]] = (fun: list) => fun.apply()
 			}
 			class findEligible(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGoogleCloudPaymentsResellerSubscriptionV1FindEligiblePromotionsRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1FindEligiblePromotionsRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1FindEligiblePromotionsResponse])
+				def withGoogleCloudPaymentsResellerSubscriptionV1FindEligiblePromotionsRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1FindEligiblePromotionsRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1FindEligiblePromotionsResponse])
 			}
 			object findEligible {
-				def apply(partnersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): findEligible = new findEligible(auth(ws.url(BASE_URL + s"v1/partners/${partnersId}/promotions:findEligible")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(partnersId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): findEligible = new findEligible(ws.url(BASE_URL + s"v1/partners/${partnersId}/promotions:findEligible").addQueryStringParameters("parent" -> parent.toString))
 			}
 		}
 		object subscriptions {
 			class cancel(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGoogleCloudPaymentsResellerSubscriptionV1CancelSubscriptionRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1CancelSubscriptionRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1CancelSubscriptionResponse])
+				def withGoogleCloudPaymentsResellerSubscriptionV1CancelSubscriptionRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1CancelSubscriptionRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1CancelSubscriptionResponse])
 			}
 			object cancel {
-				def apply(partnersId :PlayApi, subscriptionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): cancel = new cancel(auth(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions/${subscriptionsId}:cancel")).addQueryStringParameters("name" -> name.toString))
+				def apply(partnersId :PlayApi, subscriptionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): cancel = new cancel(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions/${subscriptionsId}:cancel").addQueryStringParameters("name" -> name.toString))
 			}
 			class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGoogleCloudPaymentsResellerSubscriptionV1Subscription(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription])
+				def withGoogleCloudPaymentsResellerSubscriptionV1Subscription(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription])
 			}
 			object create {
-				def apply(partnersId :PlayApi, subscriptionId: String, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions")).addQueryStringParameters("subscriptionId" -> subscriptionId.toString, "parent" -> parent.toString))
+				def apply(partnersId :PlayApi, subscriptionId: String, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions").addQueryStringParameters("subscriptionId" -> subscriptionId.toString, "parent" -> parent.toString))
 			}
 			class extend(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGoogleCloudPaymentsResellerSubscriptionV1ExtendSubscriptionRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1ExtendSubscriptionRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1ExtendSubscriptionResponse])
+				def withGoogleCloudPaymentsResellerSubscriptionV1ExtendSubscriptionRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1ExtendSubscriptionRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1ExtendSubscriptionResponse])
 			}
 			object extend {
-				def apply(partnersId :PlayApi, subscriptionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): extend = new extend(auth(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions/${subscriptionsId}:extend")).addQueryStringParameters("name" -> name.toString))
+				def apply(partnersId :PlayApi, subscriptionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): extend = new extend(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions/${subscriptionsId}:extend").addQueryStringParameters("name" -> name.toString))
 			}
 			class undoCancel(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGoogleCloudPaymentsResellerSubscriptionV1UndoCancelSubscriptionRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1UndoCancelSubscriptionRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1UndoCancelSubscriptionResponse])
+				def withGoogleCloudPaymentsResellerSubscriptionV1UndoCancelSubscriptionRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1UndoCancelSubscriptionRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1UndoCancelSubscriptionResponse])
 			}
 			object undoCancel {
-				def apply(partnersId :PlayApi, subscriptionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): undoCancel = new undoCancel(auth(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions/${subscriptionsId}:undoCancel")).addQueryStringParameters("name" -> name.toString))
+				def apply(partnersId :PlayApi, subscriptionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): undoCancel = new undoCancel(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions/${subscriptionsId}:undoCancel").addQueryStringParameters("name" -> name.toString))
 			}
 			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription])
 			}
 			object get {
-				def apply(partnersId :PlayApi, subscriptionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions/${subscriptionsId}")).addQueryStringParameters("name" -> name.toString))
+				def apply(partnersId :PlayApi, subscriptionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions/${subscriptionsId}").addQueryStringParameters("name" -> name.toString))
 				given Conversion[get, Future[Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription]] = (fun: get) => fun.apply()
 			}
 			class provision(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGoogleCloudPaymentsResellerSubscriptionV1Subscription(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription])
+				def withGoogleCloudPaymentsResellerSubscriptionV1Subscription(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1Subscription])
 			}
 			object provision {
-				def apply(partnersId :PlayApi, subscriptionId: String, parent: String)(using auth: AuthToken, ec: ExecutionContext): provision = new provision(auth(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions:provision")).addQueryStringParameters("subscriptionId" -> subscriptionId.toString, "parent" -> parent.toString))
+				def apply(partnersId :PlayApi, subscriptionId: String, parent: String)(using auth: AuthToken, ec: ExecutionContext): provision = new provision(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions:provision").addQueryStringParameters("subscriptionId" -> subscriptionId.toString, "parent" -> parent.toString))
 			}
 			class entitle(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGoogleCloudPaymentsResellerSubscriptionV1EntitleSubscriptionRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1EntitleSubscriptionRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1EntitleSubscriptionResponse])
+				def withGoogleCloudPaymentsResellerSubscriptionV1EntitleSubscriptionRequest(body: Schema.GoogleCloudPaymentsResellerSubscriptionV1EntitleSubscriptionRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleCloudPaymentsResellerSubscriptionV1EntitleSubscriptionResponse])
 			}
 			object entitle {
-				def apply(partnersId :PlayApi, subscriptionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): entitle = new entitle(auth(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions/${subscriptionsId}:entitle")).addQueryStringParameters("name" -> name.toString))
+				def apply(partnersId :PlayApi, subscriptionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): entitle = new entitle(ws.url(BASE_URL + s"v1/partners/${partnersId}/subscriptions/${subscriptionsId}:entitle").addQueryStringParameters("name" -> name.toString))
 			}
 		}
 	}

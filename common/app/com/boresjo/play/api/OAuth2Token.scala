@@ -3,6 +3,8 @@ package com.boresjo.play.api
 import play.api.libs.json.*
 import play.api.libs.ws.WSRequest
 
+import scala.concurrent.Future
+
 /**
  * @example {
  * "access_token": "ya29.a0AeDClZAYuv5RWM6hNiAxWtAfT0JM-HPNPR5BsFrXJVtAqFFtjX0ARjL4lnJW3Oeti9gsXu0qK0UJvk2aT5Ms3ToK_yWaXwPBXPO9T89Z4ajYlAEqhVNwBl06vH0wXNyBTkEtPAD5HJMcH1RY4nufhmOzaVK6Wwo4PAhkavRUaCgYKAYESARMSFQHGX2Mi5czJsTenYa9ItNzipOXF7A0175",
@@ -19,7 +21,9 @@ case class OAuth2Token (
   scope: String,
   token_type: String
 ) extends AuthToken {
-  override def apply(req: WSRequest): WSRequest = req.addHttpHeaders("Authorization" -> s"$token_type $access_token")
+  override def exec(req: WSRequest, execFun: WSRequest => Future[WSRequest#Response]): Future[WSRequest#Response] = {
+    execFun(req.addHttpHeaders("Authorization" -> s"$token_type $access_token"))
+  }
 }
 
 object OAuth2Token {

@@ -16,10 +16,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object iam {
 		class troubleshoot(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withGoogleCloudPolicytroubleshooterV1TroubleshootIamPolicyRequest(body: Schema.GoogleCloudPolicytroubleshooterV1TroubleshootIamPolicyRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleCloudPolicytroubleshooterV1TroubleshootIamPolicyResponse])
+			def withGoogleCloudPolicytroubleshooterV1TroubleshootIamPolicyRequest(body: Schema.GoogleCloudPolicytroubleshooterV1TroubleshootIamPolicyRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleCloudPolicytroubleshooterV1TroubleshootIamPolicyResponse])
 		}
 		object troubleshoot {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): troubleshoot = new troubleshoot(auth(ws.url(BASE_URL + s"v1/iam:troubleshoot")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): troubleshoot = new troubleshoot(ws.url(BASE_URL + s"v1/iam:troubleshoot").addQueryStringParameters())
 		}
 	}
 }

@@ -17,51 +17,51 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	object projects {
 		object locations {
 			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListLocationsResponse]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.ListLocationsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListLocationsResponse])
 			}
 			object list {
-				def apply(projectsId :PlayApi, name: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations")).addQueryStringParameters("name" -> name.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+				def apply(projectsId :PlayApi, name: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations").addQueryStringParameters("name" -> name.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 				given Conversion[list, Future[Schema.ListLocationsResponse]] = (fun: list) => fun.apply()
 			}
 			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Location]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.Location])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Location])
 			}
 			object get {
-				def apply(projectsId :PlayApi, locationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}")).addQueryStringParameters("name" -> name.toString))
+				def apply(projectsId :PlayApi, locationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}").addQueryStringParameters("name" -> name.toString))
 				given Conversion[get, Future[Schema.Location]] = (fun: get) => fun.apply()
 			}
 			object namespaces {
 				class testIamPermissions(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withTestIamPermissionsRequest(body: Schema.TestIamPermissionsRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.TestIamPermissionsResponse])
+					def withTestIamPermissionsRequest(body: Schema.TestIamPermissionsRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.TestIamPermissionsResponse])
 				}
 				object testIamPermissions {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): testIamPermissions = new testIamPermissions(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}:testIamPermissions")).addQueryStringParameters("resource" -> resource.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): testIamPermissions = new testIamPermissions(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}:testIamPermissions").addQueryStringParameters("resource" -> resource.toString))
 				}
 				class getIamPolicy(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withGetIamPolicyRequest(body: Schema.GetIamPolicyRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Policy])
+					def withGetIamPolicyRequest(body: Schema.GetIamPolicyRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Policy])
 				}
 				object getIamPolicy {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): getIamPolicy = new getIamPolicy(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}:getIamPolicy")).addQueryStringParameters("resource" -> resource.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): getIamPolicy = new getIamPolicy(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}:getIamPolicy").addQueryStringParameters("resource" -> resource.toString))
 				}
 				class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-					def apply() = req.execute("DELETE").map(_.json.as[Schema.Empty])
+					def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 				}
 				object delete {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 				}
 				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Namespace]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.Namespace])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Namespace])
 				}
 				object get {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[get, Future[Schema.Namespace]] = (fun: get) => fun.apply()
 				}
 				class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withNamespace(body: Schema.Namespace) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Namespace])
+					def withNamespace(body: Schema.Namespace) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Namespace])
 				}
 				object patch {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}")).addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 				}
 				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListNamespacesResponse]) {
 					/** Optional. The maximum number of items to return.<br>Format: int32 */
@@ -72,49 +72,49 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 					def withFilter(filter: String) = new list(req.addQueryStringParameters("filter" -> filter.toString))
 					/** Optional. The order to list results by. General `order_by` string syntax: ` () (,)` &#42; `` allows value: `name` &#42; `` ascending or descending order by ``. If this is left blank, `asc` is used Note that an empty `order_by` string results in default order, which is order by `name` in ascending order. */
 					def withOrderBy(orderBy: String) = new list(req.addQueryStringParameters("orderBy" -> orderBy.toString))
-					def apply() = req.execute("GET").map(_.json.as[Schema.ListNamespacesResponse])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListNamespacesResponse])
 				}
 				object list {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces")).addQueryStringParameters("parent" -> parent.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces").addQueryStringParameters("parent" -> parent.toString))
 					given Conversion[list, Future[Schema.ListNamespacesResponse]] = (fun: list) => fun.apply()
 				}
 				class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withNamespace(body: Schema.Namespace) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Namespace])
+					def withNamespace(body: Schema.Namespace) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Namespace])
 				}
 				object create {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String, namespaceId: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces")).addQueryStringParameters("parent" -> parent.toString, "namespaceId" -> namespaceId.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String, namespaceId: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces").addQueryStringParameters("parent" -> parent.toString, "namespaceId" -> namespaceId.toString))
 				}
 				class setIamPolicy(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withSetIamPolicyRequest(body: Schema.SetIamPolicyRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Policy])
+					def withSetIamPolicyRequest(body: Schema.SetIamPolicyRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Policy])
 				}
 				object setIamPolicy {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): setIamPolicy = new setIamPolicy(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}:setIamPolicy")).addQueryStringParameters("resource" -> resource.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): setIamPolicy = new setIamPolicy(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}:setIamPolicy").addQueryStringParameters("resource" -> resource.toString))
 				}
 				object services {
 					class testIamPermissions(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withTestIamPermissionsRequest(body: Schema.TestIamPermissionsRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.TestIamPermissionsResponse])
+						def withTestIamPermissionsRequest(body: Schema.TestIamPermissionsRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.TestIamPermissionsResponse])
 					}
 					object testIamPermissions {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): testIamPermissions = new testIamPermissions(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}:testIamPermissions")).addQueryStringParameters("resource" -> resource.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): testIamPermissions = new testIamPermissions(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}:testIamPermissions").addQueryStringParameters("resource" -> resource.toString))
 					}
 					class getIamPolicy(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withGetIamPolicyRequest(body: Schema.GetIamPolicyRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Policy])
+						def withGetIamPolicyRequest(body: Schema.GetIamPolicyRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Policy])
 					}
 					object getIamPolicy {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): getIamPolicy = new getIamPolicy(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}:getIamPolicy")).addQueryStringParameters("resource" -> resource.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): getIamPolicy = new getIamPolicy(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}:getIamPolicy").addQueryStringParameters("resource" -> resource.toString))
 					}
 					class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Service]) {
-						def apply() = req.execute("GET").map(_.json.as[Schema.Service])
+						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Service])
 					}
 					object get {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}")).addQueryStringParameters("name" -> name.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}").addQueryStringParameters("name" -> name.toString))
 						given Conversion[get, Future[Schema.Service]] = (fun: get) => fun.apply()
 					}
 					class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withService(body: Schema.Service) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Service])
+						def withService(body: Schema.Service) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Service])
 					}
 					object patch {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}")).addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 					}
 					class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListServicesResponse]) {
 						/** Optional. The maximum number of items to return.<br>Format: int32 */
@@ -125,63 +125,63 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 						def withFilter(filter: String) = new list(req.addQueryStringParameters("filter" -> filter.toString))
 						/** Optional. The order to list results by. General `order_by` string syntax: ` () (,)` &#42; `` allows value: `name` &#42; `` ascending or descending order by ``. If this is left blank, `asc` is used Note that an empty `order_by` string results in default order, which is order by `name` in ascending order. */
 						def withOrderBy(orderBy: String) = new list(req.addQueryStringParameters("orderBy" -> orderBy.toString))
-						def apply() = req.execute("GET").map(_.json.as[Schema.ListServicesResponse])
+						def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListServicesResponse])
 					}
 					object list {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services")).addQueryStringParameters("parent" -> parent.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services").addQueryStringParameters("parent" -> parent.toString))
 						given Conversion[list, Future[Schema.ListServicesResponse]] = (fun: list) => fun.apply()
 					}
 					class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withService(body: Schema.Service) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Service])
+						def withService(body: Schema.Service) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Service])
 					}
 					object create {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, parent: String, serviceId: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services")).addQueryStringParameters("parent" -> parent.toString, "serviceId" -> serviceId.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, parent: String, serviceId: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services").addQueryStringParameters("parent" -> parent.toString, "serviceId" -> serviceId.toString))
 					}
 					class setIamPolicy(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withSetIamPolicyRequest(body: Schema.SetIamPolicyRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Policy])
+						def withSetIamPolicyRequest(body: Schema.SetIamPolicyRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Policy])
 					}
 					object setIamPolicy {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): setIamPolicy = new setIamPolicy(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}:setIamPolicy")).addQueryStringParameters("resource" -> resource.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, resource: String)(using auth: AuthToken, ec: ExecutionContext): setIamPolicy = new setIamPolicy(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}:setIamPolicy").addQueryStringParameters("resource" -> resource.toString))
 					}
 					class resolve(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-						def withResolveServiceRequest(body: Schema.ResolveServiceRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.ResolveServiceResponse])
+						def withResolveServiceRequest(body: Schema.ResolveServiceRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.ResolveServiceResponse])
 					}
 					object resolve {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): resolve = new resolve(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}:resolve")).addQueryStringParameters("name" -> name.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): resolve = new resolve(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}:resolve").addQueryStringParameters("name" -> name.toString))
 					}
 					class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-						def apply() = req.execute("DELETE").map(_.json.as[Schema.Empty])
+						def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 					}
 					object delete {
-						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}")).addQueryStringParameters("name" -> name.toString))
+						def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}").addQueryStringParameters("name" -> name.toString))
 						given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 					}
 					object endpoints {
 						class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-							def withEndpoint(body: Schema.Endpoint) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Endpoint])
+							def withEndpoint(body: Schema.Endpoint) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Endpoint])
 						}
 						object create {
-							def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, parent: String, endpointId: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}/endpoints")).addQueryStringParameters("parent" -> parent.toString, "endpointId" -> endpointId.toString))
+							def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, parent: String, endpointId: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}/endpoints").addQueryStringParameters("parent" -> parent.toString, "endpointId" -> endpointId.toString))
 						}
 						class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-							def apply() = req.execute("DELETE").map(_.json.as[Schema.Empty])
+							def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 						}
 						object delete {
-							def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, endpointsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}/endpoints/${endpointsId}")).addQueryStringParameters("name" -> name.toString))
+							def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, endpointsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}/endpoints/${endpointsId}").addQueryStringParameters("name" -> name.toString))
 							given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 						}
 						class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Endpoint]) {
-							def apply() = req.execute("GET").map(_.json.as[Schema.Endpoint])
+							def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Endpoint])
 						}
 						object get {
-							def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, endpointsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}/endpoints/${endpointsId}")).addQueryStringParameters("name" -> name.toString))
+							def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, endpointsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}/endpoints/${endpointsId}").addQueryStringParameters("name" -> name.toString))
 							given Conversion[get, Future[Schema.Endpoint]] = (fun: get) => fun.apply()
 						}
 						class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-							def withEndpoint(body: Schema.Endpoint) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Endpoint])
+							def withEndpoint(body: Schema.Endpoint) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Endpoint])
 						}
 						object patch {
-							def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, endpointsId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}/endpoints/${endpointsId}")).addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+							def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, endpointsId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}/endpoints/${endpointsId}").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 						}
 						class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListEndpointsResponse]) {
 							/** Optional. The maximum number of items to return.<br>Format: int32 */
@@ -192,10 +192,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 							def withFilter(filter: String) = new list(req.addQueryStringParameters("filter" -> filter.toString))
 							/** Optional. The order to list results by. General `order_by` string syntax: ` () (,)` &#42; `` allows values: `name`, `address`, `port` &#42; `` ascending or descending order by ``. If this is left blank, `asc` is used Note that an empty `order_by` string results in default order, which is order by `name` in ascending order. */
 							def withOrderBy(orderBy: String) = new list(req.addQueryStringParameters("orderBy" -> orderBy.toString))
-							def apply() = req.execute("GET").map(_.json.as[Schema.ListEndpointsResponse])
+							def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListEndpointsResponse])
 						}
 						object list {
-							def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}/endpoints")).addQueryStringParameters("parent" -> parent.toString))
+							def apply(projectsId :PlayApi, locationsId :PlayApi, namespacesId :PlayApi, servicesId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/namespaces/${namespacesId}/services/${servicesId}/endpoints").addQueryStringParameters("parent" -> parent.toString))
 							given Conversion[list, Future[Schema.ListEndpointsResponse]] = (fun: list) => fun.apply()
 						}
 					}

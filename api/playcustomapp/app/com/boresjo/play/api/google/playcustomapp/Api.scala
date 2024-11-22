@@ -17,10 +17,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	object accounts {
 		object customApps {
 			class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withCustomApp(body: Schema.CustomApp) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.CustomApp])
+				def withCustomApp(body: Schema.CustomApp) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.CustomApp])
 			}
 			object create {
-				def apply(account: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"playcustomapp/v1/accounts/${account}/customApps")).addQueryStringParameters())
+				def apply(account: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"playcustomapp/v1/accounts/${account}/customApps").addQueryStringParameters())
 			}
 		}
 	}

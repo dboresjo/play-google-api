@@ -18,20 +18,20 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 		object repos {
 			object operations {
 				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Operation]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.Operation])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Operation])
 				}
 				object get {
-					def apply(accountsId :PlayApi, reposId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/repos/${reposId}/operations/${operationsId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(accountsId :PlayApi, reposId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/repos/${reposId}/operations/${operationsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[get, Future[Schema.Operation]] = (fun: get) => fun.apply()
 				}
 			}
 		}
 		object apps {
 			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GoogleChecksAccountV1alphaApp]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.GoogleChecksAccountV1alphaApp])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GoogleChecksAccountV1alphaApp])
 			}
 			object get {
-				def apply(accountsId :PlayApi, appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}")).addQueryStringParameters("name" -> name.toString))
+				def apply(accountsId :PlayApi, appsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}").addQueryStringParameters("name" -> name.toString))
 				given Conversion[get, Future[Schema.GoogleChecksAccountV1alphaApp]] = (fun: get) => fun.apply()
 			}
 			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GoogleChecksAccountV1alphaListAppsResponse]) {
@@ -39,44 +39,44 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 				def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
 				/** Optional. The maximum number of results to return. The server may further constrain the maximum number of results returned in a single page. If unspecified, the server will decide the number of results to be returned.<br>Format: int32 */
 				def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
-				def apply() = req.execute("GET").map(_.json.as[Schema.GoogleChecksAccountV1alphaListAppsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GoogleChecksAccountV1alphaListAppsResponse])
 			}
 			object list {
-				def apply(accountsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(accountsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps").addQueryStringParameters("parent" -> parent.toString))
 				given Conversion[list, Future[Schema.GoogleChecksAccountV1alphaListAppsResponse]] = (fun: list) => fun.apply()
 			}
 			object operations {
 				class cancel(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withCancelOperationRequest(body: Schema.CancelOperationRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Empty])
+					def withCancelOperationRequest(body: Schema.CancelOperationRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Empty])
 				}
 				object cancel {
-					def apply(accountsId :PlayApi, appsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): cancel = new cancel(auth(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/operations/${operationsId}:cancel")).addQueryStringParameters("name" -> name.toString))
+					def apply(accountsId :PlayApi, appsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): cancel = new cancel(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/operations/${operationsId}:cancel").addQueryStringParameters("name" -> name.toString))
 				}
 				class _wait(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withWaitOperationRequest(body: Schema.WaitOperationRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Operation])
+					def withWaitOperationRequest(body: Schema.WaitOperationRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
 				}
 				object _wait {
-					def apply(accountsId :PlayApi, appsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): _wait = new _wait(auth(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/operations/${operationsId}:wait")).addQueryStringParameters("name" -> name.toString))
+					def apply(accountsId :PlayApi, appsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): _wait = new _wait(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/operations/${operationsId}:wait").addQueryStringParameters("name" -> name.toString))
 				}
 				class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-					def apply() = req.execute("DELETE").map(_.json.as[Schema.Empty])
+					def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 				}
 				object delete {
-					def apply(accountsId :PlayApi, appsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/operations/${operationsId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(accountsId :PlayApi, appsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/operations/${operationsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 				}
 				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Operation]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.Operation])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Operation])
 				}
 				object get {
-					def apply(accountsId :PlayApi, appsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/operations/${operationsId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(accountsId :PlayApi, appsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/operations/${operationsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[get, Future[Schema.Operation]] = (fun: get) => fun.apply()
 				}
 				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListOperationsResponse]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.ListOperationsResponse])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListOperationsResponse])
 				}
 				object list {
-					def apply(accountsId :PlayApi, appsId :PlayApi, name: String, filter: String, pageToken: String, pageSize: Int)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/operations")).addQueryStringParameters("name" -> name.toString, "filter" -> filter.toString, "pageToken" -> pageToken.toString, "pageSize" -> pageSize.toString))
+					def apply(accountsId :PlayApi, appsId :PlayApi, name: String, filter: String, pageToken: String, pageSize: Int)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/operations").addQueryStringParameters("name" -> name.toString, "filter" -> filter.toString, "pageToken" -> pageToken.toString, "pageSize" -> pageSize.toString))
 					given Conversion[list, Future[Schema.ListOperationsResponse]] = (fun: list) => fun.apply()
 				}
 			}
@@ -90,19 +90,19 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 					def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
 					/** Optional. An [AIP-160](https://google.aip.dev/160) filter string to filter checks within reports. Only checks that match the filter string are included in the response. Example: `state = FAILED` */
 					def withChecksFilter(checksFilter: String) = new list(req.addQueryStringParameters("checksFilter" -> checksFilter.toString))
-					def apply() = req.execute("GET").map(_.json.as[Schema.GoogleChecksReportV1alphaListReportsResponse])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GoogleChecksReportV1alphaListReportsResponse])
 				}
 				object list {
-					def apply(accountsId :PlayApi, appsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/reports")).addQueryStringParameters("parent" -> parent.toString))
+					def apply(accountsId :PlayApi, appsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/reports").addQueryStringParameters("parent" -> parent.toString))
 					given Conversion[list, Future[Schema.GoogleChecksReportV1alphaListReportsResponse]] = (fun: list) => fun.apply()
 				}
 				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.GoogleChecksReportV1alphaReport]) {
 					/** Optional. An [AIP-160](https://google.aip.dev/160) filter string to filter checks within the report. Only checks that match the filter string are included in the response. Example: `state = FAILED` */
 					def withChecksFilter(checksFilter: String) = new get(req.addQueryStringParameters("checksFilter" -> checksFilter.toString))
-					def apply() = req.execute("GET").map(_.json.as[Schema.GoogleChecksReportV1alphaReport])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.GoogleChecksReportV1alphaReport])
 				}
 				object get {
-					def apply(accountsId :PlayApi, appsId :PlayApi, reportsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/reports/${reportsId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(accountsId :PlayApi, appsId :PlayApi, reportsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/reports/${reportsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[get, Future[Schema.GoogleChecksReportV1alphaReport]] = (fun: get) => fun.apply()
 				}
 			}
@@ -110,18 +110,18 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	}
 	object aisafety {
 		class classifyContent(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withGoogleChecksAisafetyV1alphaClassifyContentRequest(body: Schema.GoogleChecksAisafetyV1alphaClassifyContentRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleChecksAisafetyV1alphaClassifyContentResponse])
+			def withGoogleChecksAisafetyV1alphaClassifyContentRequest(body: Schema.GoogleChecksAisafetyV1alphaClassifyContentRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleChecksAisafetyV1alphaClassifyContentResponse])
 		}
 		object classifyContent {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): classifyContent = new classifyContent(auth(ws.url(BASE_URL + s"v1alpha/aisafety:classifyContent")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): classifyContent = new classifyContent(ws.url(BASE_URL + s"v1alpha/aisafety:classifyContent").addQueryStringParameters())
 		}
 	}
 	object media {
 		class upload(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withGoogleChecksReportV1alphaAnalyzeUploadRequest(body: Schema.GoogleChecksReportV1alphaAnalyzeUploadRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Operation])
+			def withGoogleChecksReportV1alphaAnalyzeUploadRequest(body: Schema.GoogleChecksReportV1alphaAnalyzeUploadRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
 		}
 		object upload {
-			def apply(accountsId :PlayApi, appsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): upload = new upload(auth(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/reports:analyzeUpload")).addQueryStringParameters("parent" -> parent.toString))
+			def apply(accountsId :PlayApi, appsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): upload = new upload(ws.url(BASE_URL + s"v1alpha/accounts/${accountsId}/apps/${appsId}/reports:analyzeUpload").addQueryStringParameters("parent" -> parent.toString))
 		}
 	}
 }

@@ -16,33 +16,33 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object projects {
 		class deleteEvents(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.DeleteEventsResponse]) {
-			def apply() = req.execute("DELETE").map(_.json.as[Schema.DeleteEventsResponse])
+			def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.DeleteEventsResponse])
 		}
 		object deleteEvents {
-			def apply(projectsId :PlayApi, projectName: String)(using auth: AuthToken, ec: ExecutionContext): deleteEvents = new deleteEvents(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/events")).addQueryStringParameters("projectName" -> projectName.toString))
+			def apply(projectsId :PlayApi, projectName: String)(using auth: AuthToken, ec: ExecutionContext): deleteEvents = new deleteEvents(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/events").addQueryStringParameters("projectName" -> projectName.toString))
 			given Conversion[deleteEvents, Future[Schema.DeleteEventsResponse]] = (fun: deleteEvents) => fun.apply()
 		}
 		object locations {
 			class deleteEvents(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.DeleteEventsResponse]) {
-				def apply() = req.execute("DELETE").map(_.json.as[Schema.DeleteEventsResponse])
+				def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.DeleteEventsResponse])
 			}
 			object deleteEvents {
-				def apply(projectsId :PlayApi, locationsId :PlayApi, projectName: String)(using auth: AuthToken, ec: ExecutionContext): deleteEvents = new deleteEvents(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/locations/${locationsId}/events")).addQueryStringParameters("projectName" -> projectName.toString))
+				def apply(projectsId :PlayApi, locationsId :PlayApi, projectName: String)(using auth: AuthToken, ec: ExecutionContext): deleteEvents = new deleteEvents(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/locations/${locationsId}/events").addQueryStringParameters("projectName" -> projectName.toString))
 				given Conversion[deleteEvents, Future[Schema.DeleteEventsResponse]] = (fun: deleteEvents) => fun.apply()
 			}
 			object groups {
 				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ErrorGroup]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.ErrorGroup])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ErrorGroup])
 				}
 				object get {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, groupsId :PlayApi, groupName: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/locations/${locationsId}/groups/${groupsId}")).addQueryStringParameters("groupName" -> groupName.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, groupsId :PlayApi, groupName: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/locations/${locationsId}/groups/${groupsId}").addQueryStringParameters("groupName" -> groupName.toString))
 					given Conversion[get, Future[Schema.ErrorGroup]] = (fun: get) => fun.apply()
 				}
 				class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withErrorGroup(body: Schema.ErrorGroup) = req.withBody(Json.toJson(body)).execute("PUT").map(_.json.as[Schema.ErrorGroup])
+					def withErrorGroup(body: Schema.ErrorGroup) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.ErrorGroup])
 				}
 				object update {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, groupsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/locations/${locationsId}/groups/${groupsId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, groupsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/locations/${locationsId}/groups/${groupsId}").addQueryStringParameters("name" -> name.toString))
 				}
 			}
 			object groupStats {
@@ -67,10 +67,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 					def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
 					/** Optional. A next_page_token provided by a previous response. To view additional results, pass this token along with the identical query parameters as the first request. */
 					def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
-					def apply() = req.execute("GET").map(_.json.as[Schema.ListGroupStatsResponse])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListGroupStatsResponse])
 				}
 				object list {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, projectName: String, timeRangePeriod: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/locations/${locationsId}/groupStats")).addQueryStringParameters("projectName" -> projectName.toString, "timeRange.period" -> timeRangePeriod.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, projectName: String, timeRangePeriod: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/locations/${locationsId}/groupStats").addQueryStringParameters("projectName" -> projectName.toString, "timeRange.period" -> timeRangePeriod.toString))
 					given Conversion[list, Future[Schema.ListGroupStatsResponse]] = (fun: list) => fun.apply()
 				}
 			}
@@ -86,27 +86,27 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 					def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
 					/** Optional. A `next_page_token` provided by a previous response. */
 					def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
-					def apply() = req.execute("GET").map(_.json.as[Schema.ListEventsResponse])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListEventsResponse])
 				}
 				object list {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, projectName: String, groupId: String, timeRangePeriod: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/locations/${locationsId}/events")).addQueryStringParameters("projectName" -> projectName.toString, "groupId" -> groupId.toString, "timeRange.period" -> timeRangePeriod.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, projectName: String, groupId: String, timeRangePeriod: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/locations/${locationsId}/events").addQueryStringParameters("projectName" -> projectName.toString, "groupId" -> groupId.toString, "timeRange.period" -> timeRangePeriod.toString))
 					given Conversion[list, Future[Schema.ListEventsResponse]] = (fun: list) => fun.apply()
 				}
 			}
 		}
 		object groups {
 			class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ErrorGroup]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.ErrorGroup])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ErrorGroup])
 			}
 			object get {
-				def apply(projectsId :PlayApi, groupsId :PlayApi, groupName: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/groups/${groupsId}")).addQueryStringParameters("groupName" -> groupName.toString))
+				def apply(projectsId :PlayApi, groupsId :PlayApi, groupName: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/groups/${groupsId}").addQueryStringParameters("groupName" -> groupName.toString))
 				given Conversion[get, Future[Schema.ErrorGroup]] = (fun: get) => fun.apply()
 			}
 			class update(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withErrorGroup(body: Schema.ErrorGroup) = req.withBody(Json.toJson(body)).execute("PUT").map(_.json.as[Schema.ErrorGroup])
+				def withErrorGroup(body: Schema.ErrorGroup) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PUT")).map(_.json.as[Schema.ErrorGroup])
 			}
 			object update {
-				def apply(projectsId :PlayApi, groupsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/groups/${groupsId}")).addQueryStringParameters("name" -> name.toString))
+				def apply(projectsId :PlayApi, groupsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): update = new update(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/groups/${groupsId}").addQueryStringParameters("name" -> name.toString))
 			}
 		}
 		object groupStats {
@@ -131,10 +131,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 				def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
 				/** Optional. A next_page_token provided by a previous response. To view additional results, pass this token along with the identical query parameters as the first request. */
 				def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
-				def apply() = req.execute("GET").map(_.json.as[Schema.ListGroupStatsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListGroupStatsResponse])
 			}
 			object list {
-				def apply(projectsId :PlayApi, projectName: String, timeRangePeriod: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/groupStats")).addQueryStringParameters("projectName" -> projectName.toString, "timeRange.period" -> timeRangePeriod.toString))
+				def apply(projectsId :PlayApi, projectName: String, timeRangePeriod: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/groupStats").addQueryStringParameters("projectName" -> projectName.toString, "timeRange.period" -> timeRangePeriod.toString))
 				given Conversion[list, Future[Schema.ListGroupStatsResponse]] = (fun: list) => fun.apply()
 			}
 		}
@@ -150,17 +150,17 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 				def withPageSize(pageSize: Int) = new list(req.addQueryStringParameters("pageSize" -> pageSize.toString))
 				/** Optional. A `next_page_token` provided by a previous response. */
 				def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
-				def apply() = req.execute("GET").map(_.json.as[Schema.ListEventsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListEventsResponse])
 			}
 			object list {
-				def apply(projectsId :PlayApi, projectName: String, groupId: String, timeRangePeriod: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/events")).addQueryStringParameters("projectName" -> projectName.toString, "groupId" -> groupId.toString, "timeRange.period" -> timeRangePeriod.toString))
+				def apply(projectsId :PlayApi, projectName: String, groupId: String, timeRangePeriod: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/events").addQueryStringParameters("projectName" -> projectName.toString, "groupId" -> groupId.toString, "timeRange.period" -> timeRangePeriod.toString))
 				given Conversion[list, Future[Schema.ListEventsResponse]] = (fun: list) => fun.apply()
 			}
 			class report(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withReportedErrorEvent(body: Schema.ReportedErrorEvent) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.ReportErrorEventResponse])
+				def withReportedErrorEvent(body: Schema.ReportedErrorEvent) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.ReportErrorEventResponse])
 			}
 			object report {
-				def apply(projectsId :PlayApi, projectName: String)(using auth: AuthToken, ec: ExecutionContext): report = new report(auth(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/events:report")).addQueryStringParameters("projectName" -> projectName.toString))
+				def apply(projectsId :PlayApi, projectName: String)(using auth: AuthToken, ec: ExecutionContext): report = new report(ws.url(BASE_URL + s"v1beta1/projects/${projectsId}/events:report").addQueryStringParameters("projectName" -> projectName.toString))
 			}
 		}
 	}

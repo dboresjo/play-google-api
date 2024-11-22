@@ -16,10 +16,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object entities {
 		class search(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.SearchResponse]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.SearchResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.SearchResponse])
 		}
 		object search {
-			def apply(indent: Boolean, types: String, query: String, limit: Int, ids: String, prefix: Boolean, languages: String)(using auth: AuthToken, ec: ExecutionContext): search = new search(auth(ws.url(BASE_URL + s"v1/entities:search")).addQueryStringParameters("indent" -> indent.toString, "types" -> types.toString, "query" -> query.toString, "limit" -> limit.toString, "ids" -> ids.toString, "prefix" -> prefix.toString, "languages" -> languages.toString))
+			def apply(indent: Boolean, types: String, query: String, limit: Int, ids: String, prefix: Boolean, languages: String)(using auth: AuthToken, ec: ExecutionContext): search = new search(ws.url(BASE_URL + s"v1/entities:search").addQueryStringParameters("indent" -> indent.toString, "types" -> types.toString, "query" -> query.toString, "limit" -> limit.toString, "ids" -> ids.toString, "prefix" -> prefix.toString, "languages" -> languages.toString))
 			given Conversion[search, Future[Schema.SearchResponse]] = (fun: search) => fun.apply()
 		}
 	}

@@ -16,10 +16,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object discovery {
 		class client_status(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withClientStatusRequest(body: Schema.ClientStatusRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.ClientStatusResponse])
+			def withClientStatusRequest(body: Schema.ClientStatusRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.ClientStatusResponse])
 		}
 		object client_status {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): client_status = new client_status(auth(ws.url(BASE_URL + s"v3/discovery:client_status")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): client_status = new client_status(ws.url(BASE_URL + s"v3/discovery:client_status").addQueryStringParameters())
 		}
 	}
 }

@@ -16,50 +16,50 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object accounts {
 		class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.PublisherAccount]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.PublisherAccount])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.PublisherAccount])
 		}
 		object get {
-			def apply(accountsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/accounts/${accountsId}")).addQueryStringParameters("name" -> name.toString))
+			def apply(accountsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/accounts/${accountsId}").addQueryStringParameters("name" -> name.toString))
 			given Conversion[get, Future[Schema.PublisherAccount]] = (fun: get) => fun.apply()
 		}
 		class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListPublisherAccountsResponse]) {
-			def apply() = req.execute("GET").map(_.json.as[Schema.ListPublisherAccountsResponse])
+			def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListPublisherAccountsResponse])
 		}
 		object list {
-			def apply(pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/accounts")).addQueryStringParameters("pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+			def apply(pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/accounts").addQueryStringParameters("pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 			given Conversion[list, Future[Schema.ListPublisherAccountsResponse]] = (fun: list) => fun.apply()
 		}
 		object mediationReport {
 			class generate(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGenerateMediationReportRequest(body: Schema.GenerateMediationReportRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GenerateMediationReportResponse])
+				def withGenerateMediationReportRequest(body: Schema.GenerateMediationReportRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GenerateMediationReportResponse])
 			}
 			object generate {
-				def apply(accountsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): generate = new generate(auth(ws.url(BASE_URL + s"v1/accounts/${accountsId}/mediationReport:generate")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(accountsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): generate = new generate(ws.url(BASE_URL + s"v1/accounts/${accountsId}/mediationReport:generate").addQueryStringParameters("parent" -> parent.toString))
 			}
 		}
 		object adUnits {
 			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListAdUnitsResponse]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.ListAdUnitsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListAdUnitsResponse])
 			}
 			object list {
-				def apply(accountsId :PlayApi, parent: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/accounts/${accountsId}/adUnits")).addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+				def apply(accountsId :PlayApi, parent: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/accounts/${accountsId}/adUnits").addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 				given Conversion[list, Future[Schema.ListAdUnitsResponse]] = (fun: list) => fun.apply()
 			}
 		}
 		object networkReport {
 			class generate(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withGenerateNetworkReportRequest(body: Schema.GenerateNetworkReportRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GenerateNetworkReportResponse])
+				def withGenerateNetworkReportRequest(body: Schema.GenerateNetworkReportRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GenerateNetworkReportResponse])
 			}
 			object generate {
-				def apply(accountsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): generate = new generate(auth(ws.url(BASE_URL + s"v1/accounts/${accountsId}/networkReport:generate")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(accountsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): generate = new generate(ws.url(BASE_URL + s"v1/accounts/${accountsId}/networkReport:generate").addQueryStringParameters("parent" -> parent.toString))
 			}
 		}
 		object apps {
 			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListAppsResponse]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.ListAppsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListAppsResponse])
 			}
 			object list {
-				def apply(accountsId :PlayApi, parent: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/accounts/${accountsId}/apps")).addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+				def apply(accountsId :PlayApi, parent: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/accounts/${accountsId}/apps").addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 				given Conversion[list, Future[Schema.ListAppsResponse]] = (fun: list) => fun.apply()
 			}
 		}

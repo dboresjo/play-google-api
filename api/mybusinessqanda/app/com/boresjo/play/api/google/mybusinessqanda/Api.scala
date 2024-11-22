@@ -17,23 +17,23 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	object locations {
 		object questions {
 			class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withQuestion(body: Schema.Question) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Question])
+				def withQuestion(body: Schema.Question) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Question])
 			}
 			object create {
-				def apply(locationsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(locationsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions").addQueryStringParameters("parent" -> parent.toString))
 			}
 			class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-				def apply() = req.execute("DELETE").map(_.json.as[Schema.Empty])
+				def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 			}
 			object delete {
-				def apply(locationsId :PlayApi, questionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions/${questionsId}")).addQueryStringParameters("name" -> name.toString))
+				def apply(locationsId :PlayApi, questionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions/${questionsId}").addQueryStringParameters("name" -> name.toString))
 				given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 			}
 			class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-				def withQuestion(body: Schema.Question) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Question])
+				def withQuestion(body: Schema.Question) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Question])
 			}
 			object patch {
-				def apply(locationsId :PlayApi, questionsId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions/${questionsId}")).addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+				def apply(locationsId :PlayApi, questionsId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions/${questionsId}").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 			}
 			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListQuestionsResponse]) {
 				/** Optional. How many questions to fetch per page. The default and maximum `page_size` values are 10.<br>Format: int32 */
@@ -46,10 +46,10 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 				def withFilter(filter: String) = new list(req.addQueryStringParameters("filter" -> filter.toString))
 				/** Optional. The order to return the questions. Valid options include 'update_time desc' and 'upvote_count desc', which will return the questions sorted descendingly by the requested field. The default sort order is 'update_time desc'. */
 				def withOrderBy(orderBy: String) = new list(req.addQueryStringParameters("orderBy" -> orderBy.toString))
-				def apply() = req.execute("GET").map(_.json.as[Schema.ListQuestionsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListQuestionsResponse])
 			}
 			object list {
-				def apply(locationsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions")).addQueryStringParameters("parent" -> parent.toString))
+				def apply(locationsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions").addQueryStringParameters("parent" -> parent.toString))
 				given Conversion[list, Future[Schema.ListQuestionsResponse]] = (fun: list) => fun.apply()
 			}
 			object answers {
@@ -60,23 +60,23 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 					def withPageToken(pageToken: String) = new list(req.addQueryStringParameters("pageToken" -> pageToken.toString))
 					/** Optional. The order to return the answers. Valid options include 'update_time desc' and 'upvote_count desc', which will return the answers sorted descendingly by the requested field. The default sort order is 'update_time desc'. */
 					def withOrderBy(orderBy: String) = new list(req.addQueryStringParameters("orderBy" -> orderBy.toString))
-					def apply() = req.execute("GET").map(_.json.as[Schema.ListAnswersResponse])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListAnswersResponse])
 				}
 				object list {
-					def apply(locationsId :PlayApi, questionsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions/${questionsId}/answers")).addQueryStringParameters("parent" -> parent.toString))
+					def apply(locationsId :PlayApi, questionsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions/${questionsId}/answers").addQueryStringParameters("parent" -> parent.toString))
 					given Conversion[list, Future[Schema.ListAnswersResponse]] = (fun: list) => fun.apply()
 				}
 				class upsert(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withUpsertAnswerRequest(body: Schema.UpsertAnswerRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Answer])
+					def withUpsertAnswerRequest(body: Schema.UpsertAnswerRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Answer])
 				}
 				object upsert {
-					def apply(locationsId :PlayApi, questionsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): upsert = new upsert(auth(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions/${questionsId}/answers:upsert")).addQueryStringParameters("parent" -> parent.toString))
+					def apply(locationsId :PlayApi, questionsId :PlayApi, parent: String)(using auth: AuthToken, ec: ExecutionContext): upsert = new upsert(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions/${questionsId}/answers:upsert").addQueryStringParameters("parent" -> parent.toString))
 				}
 				class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Empty]) {
-					def apply() = req.execute("DELETE").map(_.json.as[Schema.Empty])
+					def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Empty])
 				}
 				object delete {
-					def apply(locationsId :PlayApi, questionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions/${questionsId}/answers:delete")).addQueryStringParameters("name" -> name.toString))
+					def apply(locationsId :PlayApi, questionsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/locations/${locationsId}/questions/${questionsId}/answers:delete").addQueryStringParameters("name" -> name.toString))
 					given Conversion[delete, Future[Schema.Empty]] = (fun: delete) => fun.apply()
 				}
 			}

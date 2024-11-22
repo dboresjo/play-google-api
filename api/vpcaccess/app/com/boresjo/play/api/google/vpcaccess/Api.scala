@@ -17,60 +17,60 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 	object projects {
 		object locations {
 			class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListLocationsResponse]) {
-				def apply() = req.execute("GET").map(_.json.as[Schema.ListLocationsResponse])
+				def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListLocationsResponse])
 			}
 			object list {
-				def apply(projectsId :PlayApi, name: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations")).addQueryStringParameters("name" -> name.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+				def apply(projectsId :PlayApi, name: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations").addQueryStringParameters("name" -> name.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 				given Conversion[list, Future[Schema.ListLocationsResponse]] = (fun: list) => fun.apply()
 			}
 			object operations {
 				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListOperationsResponse]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.ListOperationsResponse])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListOperationsResponse])
 				}
 				object list {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, name: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/operations")).addQueryStringParameters("name" -> name.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, name: String, filter: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/operations").addQueryStringParameters("name" -> name.toString, "filter" -> filter.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 					given Conversion[list, Future[Schema.ListOperationsResponse]] = (fun: list) => fun.apply()
 				}
 				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Operation]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.Operation])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Operation])
 				}
 				object get {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/operations/${operationsId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, operationsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/operations/${operationsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[get, Future[Schema.Operation]] = (fun: get) => fun.apply()
 				}
 			}
 			object connectors {
 				class create(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withConnector(body: Schema.Connector) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.Operation])
+					def withConnector(body: Schema.Connector) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.Operation])
 				}
 				object create {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String, connectorId: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/connectors")).addQueryStringParameters("parent" -> parent.toString, "connectorId" -> connectorId.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String, connectorId: String)(using auth: AuthToken, ec: ExecutionContext): create = new create(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/connectors").addQueryStringParameters("parent" -> parent.toString, "connectorId" -> connectorId.toString))
 				}
 				class delete(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Operation]) {
-					def apply() = req.execute("DELETE").map(_.json.as[Schema.Operation])
+					def apply() = auth.exec(req,_.execute("DELETE")).map(_.json.as[Schema.Operation])
 				}
 				object delete {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, connectorsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/connectors/${connectorsId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, connectorsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): delete = new delete(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/connectors/${connectorsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[delete, Future[Schema.Operation]] = (fun: delete) => fun.apply()
 				}
 				class get(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.Connector]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.Connector])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.Connector])
 				}
 				object get {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, connectorsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/connectors/${connectorsId}")).addQueryStringParameters("name" -> name.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, connectorsId :PlayApi, name: String)(using auth: AuthToken, ec: ExecutionContext): get = new get(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/connectors/${connectorsId}").addQueryStringParameters("name" -> name.toString))
 					given Conversion[get, Future[Schema.Connector]] = (fun: get) => fun.apply()
 				}
 				class patch(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-					def withConnector(body: Schema.Connector) = req.withBody(Json.toJson(body)).execute("PATCH").map(_.json.as[Schema.Operation])
+					def withConnector(body: Schema.Connector) = auth.exec(req.withBody(Json.toJson(body)),_.execute("PATCH")).map(_.json.as[Schema.Operation])
 				}
 				object patch {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, connectorsId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/connectors/${connectorsId}")).addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, connectorsId :PlayApi, name: String, updateMask: String)(using auth: AuthToken, ec: ExecutionContext): patch = new patch(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/connectors/${connectorsId}").addQueryStringParameters("name" -> name.toString, "updateMask" -> updateMask.toString))
 				}
 				class list(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) extends (() => Future[Schema.ListConnectorsResponse]) {
-					def apply() = req.execute("GET").map(_.json.as[Schema.ListConnectorsResponse])
+					def apply() = auth.exec(req,_.execute("GET")).map(_.json.as[Schema.ListConnectorsResponse])
 				}
 				object list {
-					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(auth(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/connectors")).addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
+					def apply(projectsId :PlayApi, locationsId :PlayApi, parent: String, pageSize: Int, pageToken: String)(using auth: AuthToken, ec: ExecutionContext): list = new list(ws.url(BASE_URL + s"v1/projects/${projectsId}/locations/${locationsId}/connectors").addQueryStringParameters("parent" -> parent.toString, "pageSize" -> pageSize.toString, "pageToken" -> pageToken.toString))
 					given Conversion[list, Future[Schema.ListConnectorsResponse]] = (fun: list) => fun.apply()
 				}
 			}

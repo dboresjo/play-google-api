@@ -16,16 +16,16 @@ class Api @Inject() (ws: WSClient) extends PlayApi {
 
 	object v1 {
 		class provideValidationFeedback(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withGoogleMapsAddressvalidationV1ProvideValidationFeedbackRequest(body: Schema.GoogleMapsAddressvalidationV1ProvideValidationFeedbackRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleMapsAddressvalidationV1ProvideValidationFeedbackResponse])
+			def withGoogleMapsAddressvalidationV1ProvideValidationFeedbackRequest(body: Schema.GoogleMapsAddressvalidationV1ProvideValidationFeedbackRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleMapsAddressvalidationV1ProvideValidationFeedbackResponse])
 		}
 		object provideValidationFeedback {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): provideValidationFeedback = new provideValidationFeedback(auth(ws.url(BASE_URL + s"v1:provideValidationFeedback")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): provideValidationFeedback = new provideValidationFeedback(ws.url(BASE_URL + s"v1:provideValidationFeedback").addQueryStringParameters())
 		}
 		class validateAddress(private val req: WSRequest)(using auth: AuthToken, ec: ExecutionContext) {
-			def withGoogleMapsAddressvalidationV1ValidateAddressRequest(body: Schema.GoogleMapsAddressvalidationV1ValidateAddressRequest) = req.withBody(Json.toJson(body)).execute("POST").map(_.json.as[Schema.GoogleMapsAddressvalidationV1ValidateAddressResponse])
+			def withGoogleMapsAddressvalidationV1ValidateAddressRequest(body: Schema.GoogleMapsAddressvalidationV1ValidateAddressRequest) = auth.exec(req.withBody(Json.toJson(body)),_.execute("POST")).map(_.json.as[Schema.GoogleMapsAddressvalidationV1ValidateAddressResponse])
 		}
 		object validateAddress {
-			def apply()(using auth: AuthToken, ec: ExecutionContext): validateAddress = new validateAddress(auth(ws.url(BASE_URL + s"v1:validateAddress")).addQueryStringParameters())
+			def apply()(using auth: AuthToken, ec: ExecutionContext): validateAddress = new validateAddress(ws.url(BASE_URL + s"v1:validateAddress").addQueryStringParameters())
 		}
 	}
 }
