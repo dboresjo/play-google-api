@@ -25,7 +25,7 @@ case class OAuth2Token (
 }
 
 object OAuth2Token {
-  given Format[OAuth2Token] = Json.format[OAuth2Token]
+  given OFormat[OAuth2Token] = Json.format[OAuth2Token]
   
   def apply(token: String): OAuth2Token = Json.parse(token).as[OAuth2Token]
   def apply(token: JsValue): OAuth2Token = token.as[OAuth2Token]

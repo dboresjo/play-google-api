@@ -9,12 +9,8 @@ trait RequestSigner {
   def exec(scope: String*)(req: WSRequest, execFun: WSRequest => Future[WSRequest#Response])(using ExecutionContext): Future[WSRequest#Response]
 }
 
-trait TokenRepository[A >: AuthToken] {
-  def getCurrent(scope: String*): Future[A]
-  def getNext(oldToken: A): Future[A]
-}
-
-private [api] class DefaultRequestSigner(tokenRepository: TokenRepository[AuthToken]) extends RequestSigner {
+//private [api] 
+class DefaultRequestSigner[A <: AuthToken](tokenRepository: TokenRepository[A]) extends RequestSigner {
   def exec(scope: String*)(req: WSRequest, execFun: WSRequest => Future[WSRequest#Response])(using ExecutionContext): Future[WSRequest#Response] = {
     for (
       currentToken <- tokenRepository.getCurrent(scope:_*);
