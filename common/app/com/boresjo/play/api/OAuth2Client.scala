@@ -1,14 +1,16 @@
 package com.boresjo.play.api
 
-import play.api.Configuration
 import play.api.libs.json.{JsObject, JsValue, Json, OFormat}
 import play.api.libs.ws.WSClient
 import play.api.mvc.Results.TemporaryRedirect
-import play.api.mvc.{AnyContent, Call, Request, Result}
+import play.api.mvc.{AnyContent, Request, Result}
+import play.api.{Configuration, Logging}
 import views.html.helper.urlEncode
 
 import java.net.URI
+import java.util.concurrent.atomic.AtomicReference
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
 
 object OAuth2Client {
@@ -45,7 +47,7 @@ object OAuth2Client {
 }
 
 @Singleton
-class OAuth2Client @Inject()(configuration: Configuration, ws: WSClient) {
+class OAuth2Client @Inject()(configuration: Configuration, ws: WSClient) extends Logging {
   import OAuth2Client.*
 
   private val applicationCredentials: Credentials = {
@@ -53,7 +55,9 @@ class OAuth2Client @Inject()(configuration: Configuration, ws: WSClient) {
     if (credentialsPath.startsWith("classpath:")) {
       getClass.getClassLoader.getResourceAsStream(credentialsPath.substring(10)) match {
         case null => throw new Exception(s"$credentialsPath not found")
-        case stream => Credentials(Json.parse(stream))
+        case stream =>
+          logger.info(s"Loading OAuth2 credentials from $credentialsPath")
+          Credentials(Json.parse(stream))
       }
     } else {
       throw new Exception(s"Only classpath: URIs are supported, not $credentialsPath")
@@ -83,7 +87,7 @@ class OAuth2Client @Inject()(configuration: Configuration, ws: WSClient) {
       "redirect_uri" -> redirectUri,
       "grant_type" -> "authorization_code"
     ).execute("POST").map { response =>
-      //println(s"${response.status} ${response.statusText}\n\t${response.body.replaceAll("\n", "\n\t")}")
+      logger.debug(s"requestToken: ${response.status} ${response.statusText}: ${response.body}")
       response.status match {
         case 200 => OAuth2Token(response.body)
         case other => throw new RuntimeException(response.statusText)
@@ -95,5 +99,35 @@ class OAuth2Client @Inject()(configuration: Configuration, ws: WSClient) {
     requestTokenForUri(code)(localUri(localPath))
   }
 
-  def refreshToken(OAuth2Token: OAuth2Token)(using ExecutionContext): Future[OAuth2Token] = ???
+  def refreshToken(oAuth2Token: OAuth2Token)(using ExecutionContext): Future[OAuth2Token] = {
+    ws.url(applicationCredentials.token_uri).withQueryStringParameters(
+      "client_id" -> applicationCredentials.client_id,
+      "client_secret" -> applicationCredentials.client_secret,
+      "refresh_token" -> oAuth2Token.refresh_token,
+      "grant_type" -> "refresh_token"
+    ).execute("POST").map { response =>
+      logger.debug(s"refreshToken: ${response.status} ${response.statusText}: ${response.body}")
+      response.status match {
+        case 200 => OAuth2Token(response.body)
+        case other => throw new RuntimeException(response.statusText)
+      }
+    }
+  }
+
+  class SimpleTokenRepository(private val initialToken: Future[OAuth2Token])(using ExecutionContext) extends TokenRepository[OAuth2Token] {
+    val current = new AtomicReference[Future[OAuth2Token]](initialToken)
+
+    def getCurrent(scope: String*): Future[OAuth2Token] = current.get()
+
+    def getNext(oldToken: OAuth2Token): Future[OAuth2Token] = {
+      current.updateAndGet(fOldToken =>
+        fOldToken.flatMap { oldToken =>
+          refreshToken(oldToken)
+        }
+      )
+    }
+  }
+  object SimpleTokenRepository {
+    def apply(initialToken: OAuth2Token)(using ExecutionContext): SimpleTokenRepository = new SimpleTokenRepository(successful(initialToken))
+  }
 }
