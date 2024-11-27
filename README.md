@@ -32,12 +32,12 @@ class MyController @Inject()(val controllerComponents: ControllerComponents, oau
       given RequestSigner = new DefaultRequestSigner(tokenRepository)
 
       for (
-        text1 <- tasksApi.tasklists.list().map { taskLists =>
-          taskLists.items.get.map(i => s"${i.id}: " + i.title.get).mkString("\n")
+        text <- tasksApi.tasklists.list().map { taskLists =>
+          taskLists.items.get.map(i => s"${i.id}: ${i.title}").mkString("\n")
         };
         nextToken <- tokenRepository.getCurrent()
       ) yield {
-        Ok(text1 + "\n" + text2).withSession("google" -> Json.stringify(Json.toJson(nextToken)))
+        Ok(text).withSession("google" -> Json.stringify(Json.toJson(nextToken)))
       }
     }.getOrElse {
       Future.successful(Unauthorized("No token"))
