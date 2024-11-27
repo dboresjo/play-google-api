@@ -7,9 +7,10 @@ ThisBuild / maxErrors := 1
 
 ThisBuild / libraryDependencies += guice
 ThisBuild / libraryDependencies += ws
+ThisBuild / libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.0" % Test
 
 lazy val common = (project in file("common")).enablePlugins(PlayScala).settings (
-  name := "play-google-api"
+  name := "play-google-api",
 )
 
 lazy val androiddeviceprovisioningApi = (project in file("api/androiddeviceprovisioning")).enablePlugins(PlayScala).dependsOn(common).settings (

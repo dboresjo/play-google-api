@@ -22,6 +22,13 @@ case class OAuth2Token (
   token_type: String
 ) extends AuthToken {
   override def apply(req: WSRequest): WSRequest = req.addHttpHeaders("Authorization" -> s"$token_type $access_token")
+
+  private lazy val flatTokenScope: Seq[String] = scope.split("\\s+")
+
+  def checkScope(requiredScope: String*): Boolean = {
+    val flatRequired: Seq[String] = requiredScope.flatMap(_.split(" "))
+    flatTokenScope.intersect(flatRequired).nonEmpty
+  }
 }
 
 object OAuth2Token {
